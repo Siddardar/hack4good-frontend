@@ -2,39 +2,44 @@
 
 import * as React from "react"
 import {
+  AudioWaveform,
   BookOpen,
   Bot,
-  Sun,
+  Command,
   Frame,
-  LifeBuoy,
+  GalleryVerticalEnd,
   Map,
   PieChart,
-  Send,
   Settings2,
-  SquareTerminal,
-  ShoppingBasket,
   Gavel,
+  ShoppingBasket,
+  Lock,
+  Sun,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
 import { NavProjects } from "@/components/nav-projects"
-import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
+import { TeamSwitcher } from "@/components/team-switcher"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarRail,
 } from "@/components/ui/sidebar"
 
+// This is sample data.
 const data = {
   user: {
     name: "shadcn",
     email: "m@example.com",
-    avatar: "https://pm1.aminoapps.com/6626/356b43af31f6b345f609e0237a37d28cee8ab6b7_00.jpg",
+    avatar: "/avatars/shadcn.jpg",
+  },
+  company: {
+    name: "Muhammadiyah",
+    logo: Sun,
+    subtitle: "Welfare Home",
   },
   navMain: [
     {
@@ -44,30 +49,72 @@ const data = {
       isActive: true,
       items: [
         {
-          title: "History",
-          url: "#",
+          title: "Favorites",
+          url: "/dashboard",
         },
         {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
+          title: "Recently Added",
           url: "#",
         },
       ],
     },
     {
-      title: "Auctions",
-      url: "#",
+      title: "Auction",
+      url: "/auction",
       icon: Gavel,
       items: [
         {
-          title: "Featured",
+          title: "Favourites",
           url: "#",
         },
         {
-          title: "Recent",
+          title: "Recently Added",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Admin",
+      url: "/admin",
+      icon: Lock,
+      items: [
+        {
+          title: "Introduction",
+          url: "#",
+        },
+        {
+          title: "Get Started",
+          url: "#",
+        },
+        {
+          title: "Tutorials",
+          url: "#",
+        },
+        {
+          title: "Changelog",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Settings",
+      url: "#",
+      icon: Settings2,
+      items: [
+        {
+          title: "General",
+          url: "#",
+        },
+        {
+          title: "Team",
+          url: "#",
+        },
+        {
+          title: "Billing",
+          url: "#",
+        },
+        {
+          title: "Limits",
           url: "#",
         },
       ],
@@ -92,25 +139,11 @@ const data = {
   ],
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {  
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <a href="#">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Sun className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Muhammadiyah</span>
-                  <span className="truncate text-xs">Welfare Home</span>
-                </div>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <TeamSwitcher company={data.company}/>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
@@ -119,6 +152,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <NavUser user={data.user} />
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   )
 }
