@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/sidebar";
 import { signOut } from "firebase/auth";
 import { auth } from "@/app/firebase/config";
+import { Button } from "./ui/button";
 
 export function NavUser({
   user,
@@ -38,6 +39,17 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    try {
+      sessionStorage.removeItem("user");
+      console.log("User logged out");
+      signOut(auth);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <SidebarMenu>
@@ -101,7 +113,7 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <LogOut onClick={() => signOut(auth)} />
+              <Button onClick={handleLogout} />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

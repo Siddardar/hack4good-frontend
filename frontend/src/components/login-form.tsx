@@ -24,6 +24,7 @@ export function LoginForm({
       const email = username + "@random.com";
       const res = await signInWithEmailAndPassword(email, password);
       console.log({ res });
+      sessionStorage.setItem("user", username);
       setUsername("");
       setPassword("");
       router.push("/dashboard");

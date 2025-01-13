@@ -18,8 +18,21 @@ import {
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Users } from "lucide-react";
 
 export default function Page() {
+  const [user] = useAuthState(auth);
+  const router = useRouter();
+  const userSession = sessionStorage.getItem("user");
+  console.log({ user });
+
+  useEffect(() => {
+    if (!user && !userSession) {
+      router.push("/login");
+    }
+  }, [userSession]);
+
   return (
     <SidebarProvider>
       <AppSidebar />
