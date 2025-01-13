@@ -27,7 +27,11 @@ export function LoginForm({
       sessionStorage.setItem("user", username);
       setUsername("");
       setPassword("");
-      router.push("/dashboard");
+      if (res) {
+        router.push("/dashboard");
+      } else {
+        throw "Invalid Credentials";
+      }
     } catch (err) {
       console.error(err);
     }
