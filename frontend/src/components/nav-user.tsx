@@ -28,6 +28,7 @@ import {
 import { signOut } from "firebase/auth";
 import { auth } from "@/app/firebase/config";
 import { Button } from "./ui/button";
+import { useRouter } from "next/navigation";
 
 export function NavUser({
   user,
@@ -39,13 +40,15 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+  const router = useRouter();
 
-  const handleLogout = async (e) => {
+  const handleLogout = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
       sessionStorage.removeItem("user");
       console.log("User logged out");
       signOut(auth);
+      router.push("/login");
     } catch (err) {
       console.error(err);
     }
