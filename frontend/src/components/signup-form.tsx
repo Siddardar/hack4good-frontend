@@ -42,7 +42,13 @@ export function SignupForm({
     e.preventDefault();
     try {
       const email = username + "@random.com";
-      const res = await createUserWithEmailAndPassword(email, password);
+      const res = await createUserWithEmailAndPassword(email, password).then(
+        (cred) => {
+          if (cred) {
+            writeUserData(cred.user.uid, username, password);
+          }
+        }
+      );
       console.log({ res });
       setUsername("");
       setPassword("");
