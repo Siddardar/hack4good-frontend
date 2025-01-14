@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { use, useEffect, useState } from "react";
 import { initializeApp } from "firebase/app";
 import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
-import { auth } from "@/app/firebase/config";
+import { auth, database } from "@/app/firebase/config";
+import { ref, set } from "firebase/database";
 
 const passwordRegex = /^.{6,}$/;
 
@@ -22,6 +23,13 @@ export function SignupForm({
   const [matchPassword, setMatchPassword] = useState(false);
   const [createUserWithEmailAndPassword] =
     useCreateUserWithEmailAndPassword(auth);
+
+  function writeUserData(id: string, username: string, password: string) {
+    set(ref(database, "users/" + id), {
+      username: username,
+      password: password,
+    });
+  }
 
   useEffect(() => {
     const res = passwordRegex.test(password);
