@@ -75,21 +75,19 @@ export default function Page() {
 
         <div className="p-4">
           {/* Search bar */}
-          <div className="flex">
+          <div className="flex border border-gray-300 rounded-3xl">
+          <button
+            className="ml-2 p-3 flex items-center justify-center"
+          >
+            <GoSearch size={20} color="gray-300" />
+          </button>
           <input
             type="text"
             placeholder="Search for items..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-3xl"
+            className="w-full p-2 focus:outline-none focus:ring-0"
           />
-
-          <button
-            onClick={() => console.log("Search icon clicked")}
-            className="ml-2 p-3 bg-gray-200 rounded-xl flex items-center justify-center"
-          >
-            <GoSearch size={20} color="gray-300" />
-          </button>
           </div>
         </div>
 
