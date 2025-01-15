@@ -28,7 +28,7 @@ export function LoginForm({
       setUsername("");
       setPassword("");
       if (res) {
-        router.push("/dashboard");
+        router.push("/profile");
       } else {
         throw "Invalid Credentials";
       }
