@@ -19,7 +19,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Users } from "lucide-react";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function Page() {
   const [user] = useAuthState(auth);
@@ -31,7 +31,25 @@ export default function Page() {
     if (!user && !userSession) {
       router.push("/login");
     }
+
   }, [userSession]);
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const tokenResult = await user.getIdTokenResult();
+      const isAdmin = !!tokenResult.claims.admin;
+
+      if (isAdmin) {
+        console.log("User is an admin");
+      } else {
+        console.log("User is a normal user");
+      }
+    } else {
+      if (!userSession) {
+        router.push("/login");
+      }
+    }
+  });
 
   return (
     <SidebarProvider>
