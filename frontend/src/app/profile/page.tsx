@@ -42,7 +42,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Mail, CircleUser } from "lucide-react";
-import { updateProfile, updateEmail, updatePassword } from "firebase/auth";
+import {
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  updateEmail,
+  updatePassword,
+} from "firebase/auth";
 
 export default function Page() {
   const [user] = useAuthState(auth);
@@ -72,9 +77,16 @@ export default function Page() {
         (document.getElementById("newPassword") as HTMLInputElement)?.value ||
           ""
       );
-      updateEmail(currentUser, email).then(() => {
+      if (currentUser) {
+        const credential = EmailAuthProvider.credential(
+          currentUser.email || "",
+          (document.getElementById("oldPassword") as HTMLInputElement)?.value ||
+            ""
+        );
+        const res = await reauthenticateWithCredential(currentUser, credential);
+        updateEmail(currentUser, "successful@random.com");
         updatePassword(currentUser, password);
-      });
+      }
     } catch (err) {
       console.error(err);
     }
@@ -124,7 +136,7 @@ export default function Page() {
               <DialogTrigger asChild>
                 <Button variant="outline">Edit Profile</Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
                   <DialogTitle>Edit profile</DialogTitle>
                   <DialogDescription>
@@ -140,8 +152,18 @@ export default function Page() {
                     <Input id="newName" className="col-span-3" />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="newMail" className="text-right">
-                      Password
+                    <Label htmlFor="oldPassword" className="text-right">
+                      Old Password
+                    </Label>
+                    <Input
+                      id="oldPassword"
+                      type="text"
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="newPassword" className="text-right">
+                      New Password
                     </Label>
                     <Input
                       id="newPassword"
