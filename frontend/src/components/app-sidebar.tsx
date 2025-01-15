@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { usePathname } from "next/navigation";
 import {
   AudioWaveform,
   BookOpen,
@@ -29,12 +30,11 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-// This is sample data.
 const data = {
   user: {
     name: "shadcn",
     email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    avatar: "https://github.com/shadcn.png",
   },
   company: {
     name: "Muhammadiyah",
@@ -44,7 +44,7 @@ const data = {
   navMain: [
     {
       title: "Store",
-      url: "#",
+      url: "/dashboard",
       icon: ShoppingBasket,
       isActive: true,
       items: [
@@ -79,26 +79,26 @@ const data = {
       icon: Lock,
       items: [
         {
-          title: "Introduction",
+          title: "Residents",
+          url: "/admin/residents",
+        },
+        {
+          title: "Staff",
           url: "#",
         },
         {
-          title: "Get Started",
-          url: "#",
+          title: "Voucher Tasks",
+          url: "/admin/tasks",
         },
         {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
+          title: "Requests",
+          url: "/admin/requests",
         },
       ],
     },
     {
       title: "Settings",
-      url: "#",
+      url: "/settings",
       icon: Settings2,
       items: [
         {
@@ -140,13 +140,25 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname();
+  const basePath = pathname.split('/').slice(0, 2).join('/');
+
+  const updatedNavMain = data.navMain.map((navItem) => ({
+    ...navItem,
+    isActive: basePath === navItem.url,
+    items: navItem.items?.map((subItem) => ({
+      ...subItem,
+      isActive: pathname === subItem.url,
+    })),
+  }));
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <TeamSwitcher company={data.company}/>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={updatedNavMain} />
         <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
