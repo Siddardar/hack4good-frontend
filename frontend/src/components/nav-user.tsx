@@ -66,6 +66,7 @@ export function NavUser({
     e.preventDefault();
     try {
       sessionStorage.removeItem("user");
+      sessionStorage.removeItem("isAdmin");
       console.log("User logged out");
       signOut(auth);
       router.push("/login");

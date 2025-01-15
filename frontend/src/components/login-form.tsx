@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSignInWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { auth } from "@/app/firebase/config";
+import { onAuthStateChanged } from "firebase/auth";
+import { setCookie } from "nookies";
 
 export function LoginForm({
   className,
@@ -21,22 +23,56 @@ export function LoginForm({
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const email = username + "@random.com";
+      const email = username.includes("@") ? username : username + "@random.com";
       const res = await signInWithEmailAndPassword(email, password);
       console.log({ res });
-      sessionStorage.setItem("user", username);
-      setUsername("");
-      setPassword("");
+  
       if (res) {
-        router.push("/dashboard");
+        // Store user in session
+        sessionStorage.setItem("user", username);
+  
+        // Clear form fields
+        setUsername("");
+        setPassword("");
+  
+        // Redirect to store
+        router.push("/store");
+  
+        // Check auth state and admin status
+        onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            const tokenResult = await user.getIdTokenResult();
+            const token = await user.getIdToken(true);
+            console.log(token)
+            const isAdmin = !!tokenResult.claims.admin; // Ensure it's a boolean
+  
+            // Store admin status in session as a string
+            sessionStorage.setItem("isAdmin", JSON.stringify(isAdmin));
+  
+            if (isAdmin) {
+              console.log("User is an admin");
+            } else {
+              console.log("User is a normal user");
+            }
+
+            setCookie(null, "token", token, {
+              maxAge: 30 * 24 * 60 * 60, // 30 days
+              path: "/", // Cookie available on all routes
+            });
+        
+          } else {
+            if (!sessionStorage.getItem("user")) {
+              router.push("/login");
+            }
+          }
+        });
       } else {
-        throw "Invalid Credentials";
+        throw new Error("Invalid Credentials");
       }
     } catch (err) {
       console.error(err);
     }
   };
-
   return (
     <form
       onSubmit={handleLogin}

@@ -21,6 +21,8 @@ import { useEffect } from "react";
 import { Card, CardBody, CardFooter, Image } from "@nextui-org/react";
 import { GoSearch } from "react-icons/go";
 
+import { onAuthStateChanged } from "firebase/auth";
+
 export default function Page() {
   const [user] = useAuthState(auth);
   const router = useRouter();
@@ -42,6 +44,7 @@ export default function Page() {
     if (!user && !userSession) {
       router.push("/login");
     }
+
   }, [userSession]);
 
   useEffect(() => {
