@@ -24,13 +24,6 @@ export function SignupForm({
   const [createUserWithEmailAndPassword] =
     useCreateUserWithEmailAndPassword(auth);
 
-  function writeUserData(id: string, username: string, password: string) {
-    set(ref(database, "users/" + id), {
-      username: username,
-      password: password,
-    });
-  }
-
   useEffect(() => {
     const res = passwordRegex.test(password);
     setValidPassword(res);
@@ -42,13 +35,7 @@ export function SignupForm({
     e.preventDefault();
     try {
       const email = username + "@random.com";
-      const res = await createUserWithEmailAndPassword(email, password).then(
-        (cred) => {
-          if (cred) {
-            writeUserData(cred.user.uid, username, password);
-          }
-        }
-      );
+      const res = await createUserWithEmailAndPassword(email, password);
       console.log({ res });
       setUsername("");
       setPassword("");

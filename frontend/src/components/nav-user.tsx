@@ -100,7 +100,10 @@ export function NavUser({
             align="end"
             sideOffset={4}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
+            <DropdownMenuItem
+              className="p-0 font-normal"
+              onSelect={() => router.push("/profile")}
+            >
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={NAME || undefined} />
@@ -111,18 +114,18 @@ export function NavUser({
                   <span className="truncate text-xs">{EMAIL}</span>
                 </div>
               </div>
-            </DropdownMenuLabel>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onSelect={() => router.push("/transactions")}>  
-                  <Sparkles />
-                  Transactions
+              <DropdownMenuItem onSelect={() => router.push("/transactions")}>
+                <Sparkles />
+                Transactions
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem onSelect={() => router.push("/profile")}>
-                <BadgeCheck/>
+                <BadgeCheck />
                 Account
               </DropdownMenuItem>
               <DropdownMenuItem>
@@ -136,8 +139,8 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={handleLogout}>
-                <LogOut />
-                Log out
+              <LogOut />
+              Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -1,6 +1,9 @@
 "use client";
 
 import { AppSidebar } from "@/components/app-sidebar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -18,7 +21,7 @@ import {
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -39,13 +42,55 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Mail, CircleUser } from "lucide-react";
+import { updateProfile, updateEmail, updatePassword } from "firebase/auth";
 
 export default function Page() {
   const [user] = useAuthState(auth);
-  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const tempUser = sessionStorage.getItem("user");
+  const tempEmail = sessionStorage.getItem("user") + "@random.com";
   const userSession = sessionStorage.getItem("user");
-  const email = userSession + "@random.com";
+  const currentUser = auth.currentUser;
+  const router = useRouter();
   console.log({ user });
+
+  const handleSave = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    console.log("saved");
+    try {
+      setUsername(
+        (document.getElementById("newName") as HTMLInputElement)?.value || ""
+      );
+      setEmail(
+        (document.getElementById("newName") as HTMLInputElement)?.value +
+          "@random.com" || ""
+      );
+      setPassword(
+        (document.getElementById("newPassword") as HTMLInputElement)?.value ||
+          ""
+      );
+      updateEmail(currentUser, email).then(() => {
+        updatePassword(currentUser, password);
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // const updateDb = () => {
+  //   try {
+  //     if (currentUser) {
+  //       const NAME = username + "@gmail.com";
+  //       console.log(email);
+
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
 
   useEffect(() => {
     if (!user && !userSession) {
@@ -75,16 +120,47 @@ export default function Page() {
             <CardTitle>User Profile</CardTitle>
           </CardHeader>
           <div className="flex justify-end mt-4 mr-4">
-            <Dialog>
-              <DialogTrigger>Edit Profile</DialogTrigger>
-              <DialogContent>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">Edit Profile</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                  <DialogTitle>Are you absolutely sure?</DialogTitle>
+                  <DialogTitle>Edit profile</DialogTitle>
                   <DialogDescription>
-                    This action cannot be undone. This will permanently delete
-                    your account and remove your data from our servers.
+                    Make changes to your profile here. Click save when you're
+                    done.
                   </DialogDescription>
                 </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="newName" className="text-right">
+                      Username
+                    </Label>
+                    <Input id="newName" className="col-span-3" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="newMail" className="text-right">
+                      Password
+                    </Label>
+                    <Input
+                      id="newPassword"
+                      type="text"
+                      className="col-span-3"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    type="submit"
+                    onClick={(e) => {
+                      handleSave(e);
+                      setOpen(false);
+                    }}
+                  >
+                    Save changes
+                  </Button>
+                </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
@@ -96,28 +172,25 @@ export default function Page() {
           <CardContent>
             <div className="flex justify-center">
               <p className="font-bold text-2xl">
-                {sessionStorage.user || "MISSING INFO"}
+                {!username ? tempUser : username}
               </p>
             </div>
             <CardDescription className="flex justify-center items-center gap-2 mt-2">
               <CircleUser className="w-6 h-6" />
-              <span className="ml-2 text-lg">ROLE TO BE DISPLAYED HERE</span>
+              <span className="ml-2 text-sm">ROLE TO BE DISPLAYED HERE</span>
             </CardDescription>
 
             <CardDescription className="flex justify-center items-center gap-2 mt-2">
               <Mail className="w-6 h-6" />
-              <span className="ml-2 text-lg">{email}</span>
+              <span className="ml-2 text-sm">{!email ? tempEmail : email}</span>
             </CardDescription>
           </CardContent>
           <Separator />
           <CardContent>
             <div className="mt-4">
-              <CardTitle>Recent Transactions</CardTitle>
+              <CardTitle>Purchase History</CardTitle>
             </div>
           </CardContent>
-          <CardFooter>
-            <p>Card Footer</p>
-          </CardFooter>
         </Card>
       </SidebarInset>
     </SidebarProvider>
