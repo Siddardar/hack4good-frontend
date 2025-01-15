@@ -44,17 +44,17 @@ const data = {
   navMain: [
     {
       title: "Store",
-      url: "/dashboard",
+      url: "/store",
       icon: ShoppingBasket,
       isActive: true,
       items: [
         {
           title: "Favorites",
-          url: "/dashboard",
+          url: "/store",
         },
         {
           title: "Recently Added",
-          url: "#",
+          url: "/store",
         },
       ],
     },

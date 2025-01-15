@@ -62,7 +62,7 @@ export function NavUser({
   const { isMobile } = useSidebar();
   const router = useRouter();
 
-  const handleLogout = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleLogout = async (e: Event) => {
     e.preventDefault();
     try {
       sessionStorage.removeItem("user");
@@ -114,17 +114,15 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Button onClick={() => router.push("/transactions")}>
+              <DropdownMenuItem onSelect={() => router.push("/transactions")}>  
                   <Sparkles />
                   Transactions
-                </Button>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
+              <DropdownMenuItem onSelect={() => router.push("/profile")}>
+                <BadgeCheck/>
                 Account
               </DropdownMenuItem>
               <DropdownMenuItem>
@@ -137,11 +135,9 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Button onClick={handleLogout}>
+            <DropdownMenuItem onSelect={handleLogout}>
                 <LogOut />
                 Log out
-              </Button>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
