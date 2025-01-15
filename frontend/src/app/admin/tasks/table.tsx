@@ -131,12 +131,12 @@ export function DataTable() {
         accessorKey: "status",
         header: () => <div>Status</div>,
         cell: ({ row }) => <div>{row.getValue("status")}</div>,
-        filterFn:(row, col, value) => {
-            if (!value || value.length === 0) {
-                return true
-            }
+        filterFn: (row, col, value) => {
+          if (!value || value.length === 0) {
+            return true
+          }
 
-            return value.includes(row.getValue(col))
+          return value.includes(row.getValue(col))
         }
       },
       {
@@ -277,38 +277,38 @@ export function DataTable() {
           className="max-w-sm"
         />
         <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
-            Status <ChevronDown />
+              Status <ChevronDown />
             </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
             {possibleStatuses.map((status) => {
-            const checked = statusSelection.includes(status)
-            return (
+              const checked = statusSelection.includes(status)
+              return (
                 <DropdownMenuCheckboxItem
-                key={status}
-                className="capitalize"
-                checked={checked}
-                onCheckedChange={(value) => {
+                  key={status}
+                  className="capitalize"
+                  checked={checked}
+                  onCheckedChange={(value) => {
                     setStatusSelection((prev) => {
-                    if (value) {
+                      if (value) {
                         return [...prev, status]
-                    } else {
+                      } else {
                         return prev.filter((s) => s !== status)
-                    }
+                      }
                     })
-                }}
-                onSelect={(event) => {
+                  }}
+                  onSelect={(event) => {
                     event.preventDefault()
-                }
-                }
+                  }
+                  }
                 >
-                {status}
+                  {status}
                 </DropdownMenuCheckboxItem>
-            )
+              )
             })}
-        </DropdownMenuContent>
+          </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
@@ -323,9 +323,9 @@ export function DataTable() {
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                   </TableHead>
                 ))}
               </TableRow>

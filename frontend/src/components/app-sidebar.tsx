@@ -94,6 +94,10 @@ const data = {
           title: "Requests",
           url: "/admin/requests",
         },
+        {
+          title: "Reports",
+          url: "/admin/reports",
+        },
       ],
     },
     {
