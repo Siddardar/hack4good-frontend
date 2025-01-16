@@ -113,7 +113,7 @@ export default function Page() {
               className="flex items-center gap-3 bg-gray-100 rounded-lg p-2 hover:bg-gray-200 transition-colors"
             >
               <ShoppingCart size={24} />
-              <span>Cart (0)</span>
+              <span>Cart</span>
             </button>
             </div>
           </div>
