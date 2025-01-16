@@ -84,7 +84,7 @@ export default function Page() {
             ""
         );
         const res = await reauthenticateWithCredential(currentUser, credential);
-        updateEmail(currentUser, "successful@random.com");
+        updateEmail(currentUser, email);
         updatePassword(currentUser, password);
       }
     } catch (err) {
