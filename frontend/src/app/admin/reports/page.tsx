@@ -1,3 +1,6 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import {
   Breadcrumb,
@@ -18,6 +21,24 @@ import { DatePickerForm } from "./DatePickerForm"
 import { DatesTable } from "./Table"
 
 export default function Page() {
+  const [dateRanges, setDateRanges] = useState([])
+
+  useEffect(() => {
+    const fetchDateRanges = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/date-ranges")
+        const data = await response.json()
+        setDateRanges(data)
+      } catch (error) {
+        console.error("Failed to fetch date ranges:", error)
+      }
+    }
+
+    fetchDateRanges()
+  }, [])
+
+  const isDateRangesEmpty = dateRanges.length === 0
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -29,9 +50,7 @@ export default function Page() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/admin">
-                    Admin
-                  </BreadcrumbLink>
+                  <BreadcrumbLink href="/admin">Admin</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
@@ -41,16 +60,17 @@ export default function Page() {
             </Breadcrumb>
           </div>
         </header>
-        <div className="flex flex-1 justify-between items-center p-4 pt-0">
-          <div className="w-1/2 justify-center flex">
-            <DatesTable />
-          </div>
-          <div className="flex w-1/2">
+        <div className={`flex flex-1 items-center p-4 pt-0 ${isDateRangesEmpty ? "justify-center" : "justify-between"}`}>
+          {!isDateRangesEmpty && (
+            <div className="w-1/2 flex justify-center">
+              <DatesTable dateRanges={dateRanges} />
+            </div>
+          )}
+          <div className={`${isDateRangesEmpty ? "w-full flex justify-center" : "w-1/2 flex"}`}>
             <DatePickerForm />
           </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
-    
   )
 }
