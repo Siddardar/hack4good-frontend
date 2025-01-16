@@ -60,13 +60,18 @@ export default function Page() {
     }, 1000);
   };
   const handleDelete = (e, item) => {
-    setList((prevList) => prevList.filter((i) => i !== item)); 
+    const updatedList = list.filter((i) => i !== item);
+    setList(updatedList);
+  
+    const updatedSelectedList = selectedList.filter((i) => i !== item);
+    setSelectedList(updatedSelectedList);
+  
     setShowFeedback(true);
-
     setTimeout(() => {
-        setShowFeedback(false);
+      setShowFeedback(false);
     }, 1000);
   };
+  
   const scrollToTop = () => {
     const scrollContainer = document.getElementById('cart-items');
     if (scrollContainer) {
