@@ -21,7 +21,7 @@ import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { ShoppingBasket, ArrowUp, Check } from 'lucide-react';
-import CartItem from "@/components/ui/cart-item";
+import CartItem from "@/components/ui/swipeable-cart-item"
 
 export default function Page() {
   const [user] = useAuthState(auth);
@@ -170,14 +170,7 @@ export default function Page() {
       ))}
 
       {/* Scroll to top button */}
-      {showScrollTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-24 right-6 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow"
-        >
-          <ArrowUp size={20} />
-        </button>
-      )}
+      
     </div>
   )}
 </div>
