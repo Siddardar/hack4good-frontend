@@ -43,7 +43,7 @@ export type RequestInfo = {
   requestID: number
   dateRequested: string
   description: string
-  status: "Pending" | "Approved" | "Rejected" | "Shipping" |"Completed"
+  status: "Pending" | "Approved" | "Rejected" | "Shipping" | "Completed"
   cost: number
   name: string
 }
@@ -88,9 +88,9 @@ const initialData: RequestInfo[] = [
     description: "This is a fifth test request.",
     status: "Completed",
     cost: 500,
-    name: "John Doe", 
+    name: "John Doe",
   }
-    
+
 ]
 
 export function DataTable() {
@@ -140,12 +140,12 @@ export function DataTable() {
         accessorKey: "status",
         header: () => <div>Status</div>,
         cell: ({ row }) => <div>{row.getValue("status")}</div>,
-        filterFn:(row, col, value) => {
-            if (!value || value.length === 0) {
-                return true
-            }
+        filterFn: (row, col, value) => {
+          if (!value || value.length === 0) {
+            return true
+          }
 
-            return value.includes(row.getValue(col))
+          return value.includes(row.getValue(col))
         }
       },
       {
@@ -190,64 +190,64 @@ export function DataTable() {
             <DropdownMenu>
               {req.status !== "Completed" && (
                 <>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {/* Show the appropriate dropdown items based on req.status */}
-                {req.status === "Pending" && (
-                  <>
-                    <DropdownMenuItem
-                      onClick={() => updateReqStatus(req.requestID, "Approved")}
-                    >
-                      Approve
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => updateReqStatus(req.requestID, "Rejected")}
-                    >
-                      Reject
-                    </DropdownMenuItem>
-                  </>
-                )}
-                {req.status === "Approved" && (
-                  <>
-                  <DropdownMenuItem onClick={() => updateReqStatus(req.requestID, "Shipping")}>
-                    Ordered Item
-                  </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => updateReqStatus(req.requestID, "Rejected")}
-                    >
-                      Reject
-                    </DropdownMenuItem>
-                  </>
-                )}
-                {req.status === "Rejected" && (
-                  <>
-                    <DropdownMenuItem
-                      onClick={() => updateReqStatus(req.requestID, "Approved")}
-                    >
-                      Approve
-                    </DropdownMenuItem>
-                  </>
-                )}
-                {req.status === "Shipping" && (
-                  <>
-                    <DropdownMenuItem
-                      onClick={() => updateReqStatus(req.requestID, "Completed")}
-                    >
-                      Mark as Completed
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-              </>
-            )}
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <span className="sr-only">Open menu</span>
+                      <MoreHorizontal />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {/* Show the appropriate dropdown items based on req.status */}
+                    {req.status === "Pending" && (
+                      <>
+                        <DropdownMenuItem
+                          onClick={() => updateReqStatus(req.requestID, "Approved")}
+                        >
+                          Approve
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => updateReqStatus(req.requestID, "Rejected")}
+                        >
+                          Reject
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    {req.status === "Approved" && (
+                      <>
+                        <DropdownMenuItem onClick={() => updateReqStatus(req.requestID, "Shipping")}>
+                          Ordered Item
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => updateReqStatus(req.requestID, "Rejected")}
+                        >
+                          Reject
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    {req.status === "Rejected" && (
+                      <>
+                        <DropdownMenuItem
+                          onClick={() => updateReqStatus(req.requestID, "Approved")}
+                        >
+                          Approve
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    {req.status === "Shipping" && (
+                      <>
+                        <DropdownMenuItem
+                          onClick={() => updateReqStatus(req.requestID, "Completed")}
+                        >
+                          Mark as Completed
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </>
+              )}
             </DropdownMenu>
-            
+
           )
         },
       },
@@ -303,38 +303,38 @@ export function DataTable() {
           className="max-w-sm"
         />
         <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
-            Status <ChevronDown />
+              Status <ChevronDown />
             </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
             {possibleStatuses.map((status) => {
-            const checked = statusSelection.includes(status)
-            return (
+              const checked = statusSelection.includes(status)
+              return (
                 <DropdownMenuCheckboxItem
-                key={status}
-                className="capitalize"
-                checked={checked}
-                onCheckedChange={(value) => {
+                  key={status}
+                  className="capitalize"
+                  checked={checked}
+                  onCheckedChange={(value) => {
                     setStatusSelection((prev) => {
-                    if (value) {
+                      if (value) {
                         return [...prev, status]
-                    } else {
+                      } else {
                         return prev.filter((s) => s !== status)
-                    }
+                      }
                     })
-                }}
-                onSelect={(event) => {
+                  }}
+                  onSelect={(event) => {
                     event.preventDefault()
-                }
-                }
+                  }
+                  }
                 >
-                {status}
+                  {status}
                 </DropdownMenuCheckboxItem>
-            )
+              )
             })}
-        </DropdownMenuContent>
+          </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
@@ -349,9 +349,9 @@ export function DataTable() {
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                   </TableHead>
                 ))}
               </TableRow>

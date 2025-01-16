@@ -30,6 +30,7 @@ import { auth, database } from "@/app/firebase/config";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import { ref, child, get } from "firebase/database";
+import { destroyCookie } from "nookies";
 
 // const user = auth.currentUser;
 // const dbRef = ref(database);
@@ -70,6 +71,10 @@ export function NavUser({
       console.log("User logged out");
       signOut(auth);
       router.push("/login");
+      destroyCookie(null, "token", {
+        path: "/", // Ensure the path matches where the cookie was set
+      });
+  
     } catch (err) {
       console.error(err);
     }
