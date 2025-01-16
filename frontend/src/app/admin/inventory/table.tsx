@@ -14,7 +14,16 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
-
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -145,22 +154,68 @@ export const columns: ColumnDef<itemInfo>[] = [
     enableHiding: false,
     cell: ({ row }) => {
       const itemId = row.original;
+      const [dialogOpen, setDialogOpen] = React.useState(false);
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>Edit Information</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <div className="text-red-500 font-semibold">Remove Item</div>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => setDialogOpen(true)}>
+                Edit Information
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <div className="text-red-500 font-semibold">Remove Item</div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Edit Information</DialogTitle>
+                <DialogDescription>
+                  Edit the item information below.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className="text-right">
+                    Item Name
+                  </Label>
+                  <Input id="item_name" className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="username" className="text-right">
+                    Description
+                  </Label>
+                  <Input id="item_description" className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="username" className="text-right">
+                    Quantity
+                  </Label>
+                  <Input id="item_quantity" className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="date" className="text-right">
+                    Date Added
+                  </Label>
+                  <div className="col-span-3">
+                    <DatePickerForm />
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="submit">Save changes</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
       );
     },
   },
@@ -329,6 +384,7 @@ export function DataTable() {
                   />
                 </div>
                 <div className="flex w-1/2">
+                  <Label htmlFor="date">Date Added</Label>
                   <DatePickerForm />
                 </div>
               </div>

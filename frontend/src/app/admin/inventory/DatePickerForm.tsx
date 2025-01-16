@@ -64,7 +64,6 @@ export function DatePickerForm() {
           name="date"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Date</FormLabel>
               <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
