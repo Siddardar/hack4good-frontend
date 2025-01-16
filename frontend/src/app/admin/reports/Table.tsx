@@ -13,6 +13,8 @@ import {
 
   import { format } from "date-fns"
   import { useRouter } from "next/navigation"
+  import { ScrollArea } from "@/components/ui/scroll-area"
+  import { Separator } from "@/components/ui/separator"
   
   const dateRanges = [
     {
@@ -47,30 +49,30 @@ import {
       router.push(`/admin/reports/report?from=${fromString}&to=${toString}`)
     }
     return (
-        <>
-    <label className="block text-sm font-medium text-black">Select a previously generated report</label>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[100px]">Date Range</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {dateRanges.map((item, index) => (
-            <TableRow 
-              key={index}
-              onClick={() =>
-                handleRowClick(item.dateRange.from, item.dateRange.to)
-              }>
-              <TableCell className="font-medium">
-                    {format(item.dateRange.from, "LLL dd, y")} -{" "}
-                    {format(item.dateRange.to, "LLL dd, y")}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      </>
+      <div className="w-2/3 flex flex-col">
+        <label className="block text-sm font-medium text-black mb-2">
+          Select a previously generated report
+        </label>
+        <ScrollArea className="h-72 rounded-md border">
+          <div className="p-4">
+            <h4 className="mb-4 text-sm font-medium leading-none">Date Range</h4>
+            {dateRanges.map((item, index) => (
+              <div key={index}>
+                <div
+                  className="text-sm cursor-pointer hover:text-blue-600"
+                  onClick={() =>
+                    handleRowClick(item.dateRange.from, item.dateRange.to)
+                  }
+                >
+                  {format(item.dateRange.from, "LLL dd, y")} -{" "}
+                  {format(item.dateRange.to, "LLL dd, y")}
+                </div>
+                {index < dateRanges.length - 1 && <Separator className="my-2" />}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
     )
   }
   

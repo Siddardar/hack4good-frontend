@@ -42,11 +42,11 @@ export default function Page() {
           </div>
         </header>
         <div className="flex flex-1 justify-between items-center p-4 pt-0">
-          <div className="flex justify-center w-1/2">
-            <DatePickerForm />
-          </div>
-          <div className="w-1/2">
+          <div className="w-1/2 justify-center flex">
             <DatesTable />
+          </div>
+          <div className="flex w-1/2">
+            <DatePickerForm />
           </div>
         </div>
       </SidebarInset>
