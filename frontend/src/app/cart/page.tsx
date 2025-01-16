@@ -21,7 +21,7 @@ import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { ShoppingBasket, ArrowUp, Check } from 'lucide-react';
-import CartItem from "@/components/ui/swipeable-cart-item"
+import CartItem from "@/components/ui/clickable-cart-item"
 
 export default function Page() {
   const [user] = useAuthState(auth);
