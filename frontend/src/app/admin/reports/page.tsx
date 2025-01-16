@@ -14,8 +14,8 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 
-import { FinishedTasksTable } from "./table-finished-tasks"
-import { AllTasksTable } from "./table-all-tasks"
+import { DatePickerForm } from "./DatePickerForm"
+import { DatesTable } from "./Table"
 
 export default function Page() {
   return (
@@ -35,15 +35,19 @@ export default function Page() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Voucher Tasks</BreadcrumbPage>
+                  <BreadcrumbPage>Reports</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-            <FinishedTasksTable />
-            <AllTasksTable />
+        <div className="flex flex-1 justify-between items-center p-4 pt-0">
+          <div className="w-1/2 justify-center flex">
+            <DatesTable />
+          </div>
+          <div className="flex w-1/2">
+            <DatePickerForm />
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>

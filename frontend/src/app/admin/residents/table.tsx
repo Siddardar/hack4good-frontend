@@ -417,7 +417,6 @@ export const columns: ColumnDef<ResidentInfo>[] = [
                     </CardContent>
                   </Card>
                 </TabsContent>
-
                 <TabsContent value="requests">
                   <Card>
                     <CardHeader>
@@ -489,6 +488,7 @@ export const columns: ColumnDef<ResidentInfo>[] = [
           </Dialog>
         </>
       );
+
     },
   },
 ];
@@ -584,9 +584,9 @@ export function DataTable() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   );
                 })}

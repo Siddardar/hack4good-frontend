@@ -84,7 +84,7 @@ const data = {
         },
         {
           title: "Staff",
-          url: "#",
+          url: "/admin/staff",
         },
         {
           title: "Voucher Tasks",
@@ -93,6 +93,10 @@ const data = {
         {
           title: "Requests",
           url: "/admin/requests",
+        },
+        {
+          title: "Reports",
+          url: "/admin/reports",
         },
       ],
     },
@@ -143,14 +147,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const basePath = pathname.split("/").slice(0, 2).join("/");
 
-  const updatedNavMain = data.navMain.map((navItem) => ({
-    ...navItem,
-    isActive: basePath === navItem.url,
-    items: navItem.items?.map((subItem) => ({
-      ...subItem,
-      isActive: pathname === subItem.url,
-    })),
-  }));
+  const isAdmin = JSON.parse(sessionStorage.getItem("isAdmin") || "false");
+
+  const updatedNavMain = data.navMain
+    .filter((navItem) => isAdmin || navItem.title !== "Admin")
+    .map((navItem) => ({
+      ...navItem,
+      isActive: basePath === navItem.url,
+      items: navItem.items?.map((subItem) => ({
+        ...subItem,
+        isActive: pathname === subItem.url,
+      })),
+    }));
 
   return (
     <Sidebar collapsible="icon" {...props}>
