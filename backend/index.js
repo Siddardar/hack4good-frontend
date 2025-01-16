@@ -1,5 +1,6 @@
 const express = require("express");
 const { admin } = require("./admin"); 
+const { exportToExcel } = require('./exportToExcel');
 const bodyParser = require("body-parser");
 require('dotenv').config();
 
@@ -116,7 +117,6 @@ app.post("/add-task", async (req, res) => {
   }
 });
 
-
 //Items routes
 app.post("/add-item", async (req, res) => {
   const collection = client.db("hack4good").collection("store");
@@ -139,10 +139,95 @@ app.post("/update-item", async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
+  
+// Report routes  
+// Get date ranges
+app.get("/date-ranges", async (req, res) => {
+  const collection = client.db("hack4good").collection("date-ranges");
+  try {
+    const dateRanges = await collection
+      .find()
+      .sort({ accessed_at: -1 })
+      .toArray();
 
+    const dateRangesWithId = dateRanges.map((range) => ({
+      id: range._id.toString(),
+      ...range,
+    }));
 
+    return res.status(200).json(dateRangesWithId);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
 
+// Add date range
+app.post("/date-ranges", async (req, res) => {
+  const collection = client.db("hack4good").collection("date-ranges");
+  const { from, to, accessed_at } = req.body;
 
+  if (!from || !to || !accessed_at) {
+    return res.status(400).json({ error: "Missing required fields: from, to, or accessed_at" });
+  }
+
+  try {
+    const result = await collection.insertOne({ from, to, accessed_at });
+    return res
+      .status(200)
+      .json({ message: `Date range ${result.insertedId} created.`, id: result.insertedId });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Check if a date range already exists
+app.post("/date-ranges/check", async (req, res) => {
+  const collection = client.db("hack4good").collection("date-ranges");
+  const { from, to } = req.body;
+
+  try {
+    const existingRange = await collection.findOne({
+      from: from,
+      to: to
+    });
+
+    if (existingRange) {
+      return res.json({ exists: true, id: existingRange._id });
+    } else {
+      return res.json({ exists: false });
+    }
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Update a date range's accessed_at
+app.put("/date-ranges/:id", async (req, res) => {
+  const collection = client.db("hack4good").collection("date-ranges");
+  const { id } = req.params;
+  const { accessed_at } = req.body;
+
+  try {
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid ObjectId" });
+    }
+
+    const updatedRange = await collection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { accessed_at } }
+    );
+
+    if (updatedRange.modifiedCount > 0) {
+      return res.status(200).json({ message: "Date range updated successfully" });
+    } else {
+      return res.status(404).json({ message: "Date range not found" });
+    }
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/export-report', exportToExcel);
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
