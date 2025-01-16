@@ -26,13 +26,13 @@ const CartItem = ({ item, index, onDelete, onCheckboxChange }) => {
 
         <div className="flex flex-col flex-1">
           <b className="text-lg truncate">{item.title}</b>
+          <p className="text-lg font-semibold">{item.price}</p>
           <p className="text-gray-500 text-sm overflow-hidden text-ellipsis line-clamp-2">
             {item.description}
           </p>
         </div>
 
         <div className="flex flex-col items-center justify-center min-w-[100px] shrink-0">
-          <p className="text-lg font-semibold">{item.price}</p>
           <button
             className="mt-2 p-2 bg-red-500 text-white rounded-md flex items-center hover:bg-red-600 transition-colors"
             onClick={() => onDelete(item)}
