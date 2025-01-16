@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Card, CardBody, CardFooter, Image } from "@nextui-org/react";
 import { GoSearch } from "react-icons/go";
+import { ShoppingCart, Check } from 'lucide-react';
 
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -38,7 +39,31 @@ export default function Page() {
     { title: "Watermelon", img: "https://nextui.org/images/fruit-1.jpeg", price: "$12.20" },
   ];
   const [searchQuery, setSearchQuery] = useState(""); 
-  const [filteredList, setFilteredList] = useState(list);
+  const [filteredList, setFilteredList] = useState(list); 
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const handleCardClick = (item) => {
+    console.log("Card clicked:", item.title);
+  };
+  const handleAddToCart = (e, item) => {
+    console.log("Cart clicked for:", item.title);
+    console.log("Cart clicked for:", item.title);
+    setIsAnimating(true);
+    setShowFeedback(true);
+
+    // Cart animation
+    const cartIcon = e.currentTarget.querySelector('svg');
+    cartIcon.style.transform = 'scale(0.8)';
+    
+    setTimeout(() => {
+      cartIcon.style.transform = 'scale(1)';
+      setIsAnimating(false);
+    }, 200);
+
+    setTimeout(() => {
+      setShowFeedback(false);
+    }, 1000);
+  };
 
   useEffect(() => {
     if (!user && !userSession) {
@@ -73,12 +98,18 @@ export default function Page() {
           </div>
         </header>
 
+        <div className="p-4 justify-right">
+          {/* Balance */}
+          {/* Check cart */ }
+          <button className="item-right">
+            <ShoppingCart size={30} color="gray-300"/>
+          </button>
+        </div>
+
         <div className="p-4">
-          {/* Search bar */}
+          {/* Search bar with icon on the left */}
           <div className="flex border border-gray-300 rounded-3xl">
-          <button
-            className="ml-2 p-3 flex items-center justify-center"
-          >
+          <button className="ml-2 p-3 flex items-center justify-center">
             <GoSearch size={20} color="gray-300" />
           </button>
           <input
@@ -91,6 +122,16 @@ export default function Page() {
           </div>
         </div>
 
+        {/* Centered feedback message */}
+        {showFeedback && (
+          <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
+            <div className="bg-black text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg">
+              <Check className="w-5 h-5 text-white" />
+              <span className="text-sm font-medium">Added to cart</span>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           {/* Card Grid */}
           <div className="gap-5 grid grid-cols-2 sm:grid-cols-3">
@@ -98,9 +139,9 @@ export default function Page() {
               /* eslint-disable no-console */
               <Card
                 key={index}
-                isPressable
+                // isPressable
                 shadow="sm" // shadow for the whole card
-                onPress={() => console.log("item pressed")}
+                onPress={() => handleCardClick(item)}
               >
                 <CardBody className="overflow-visible p-0">
                   <Image
@@ -111,14 +152,23 @@ export default function Page() {
                     width="100%"
                   />
                 </CardBody>
-                <CardFooter className="text-small justify-between">
-                  <b>{item.title}</b>
-                  <p className="text-default-500">{item.price}</p>
+                <CardFooter className="text-small flex justify-between items-center">
+                  <div className="flex flex-col">
+                    <b>{item.title}</b>
+                    <p className="text-default-500 items-left">{item.price}</p>
+                  </div>
+                  <button 
+                    className="flex items-center cursor-pointer mr-2 transition-transform isAnimating ? 'scale-95' : 'scale-100'" 
+                    onClick={(e) => handleAddToCart(e, item)}
+                  >
+                    <ShoppingCart size={24} color="gray" />
+                  </button>
                 </CardFooter>
               </Card>
             ))}
           </div>
         </div>
+    
       </SidebarInset>
     </SidebarProvider>
   );
