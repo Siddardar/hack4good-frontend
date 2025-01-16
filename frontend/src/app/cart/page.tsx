@@ -20,8 +20,8 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { ShoppingBasket, ArrowUp, Check, Trash2 } from 'lucide-react';
-import { SearchBar } from "@/components/ui/search-bar";
+import { ShoppingBasket, ArrowUp, Check } from 'lucide-react';
+import CartItem from "@/components/ui/cart-item";
 
 export default function Page() {
   const [user] = useAuthState(auth);
@@ -145,105 +145,63 @@ export default function Page() {
         )}
 
         {/* Cart Items Section */}
-        <div id="cart-items" className="flex-1 overflow-y-auto px-6 relative">
-        {list.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full gap-4">
-            <p className="text-xl text-gray-500">Your cart is empty</p>
-            <button 
-                onClick={() => router.push('/store')}
-                className="flex items-center gap-2 bg-zinc-800 text-white px-6 py-2 rounded-lg hover:bg-black transition-colors"
-            >
-                <Store size={20} />
-                <span>Visit the store</span>
-            </button>
-            </div>
-        ) : (
-            <div className="grid gap-2 pb-4 relative">
-            {list.map((item, index) => (
-                <div
-                key={index}
-                className="p-4 rounded-xl border border-gray-200 shadow-sm bg-white hover:shadow-md transition-shadow"
-                >
-                <div className="flex items-center gap-4">
-                    {/* Checkbox or Delete */}
-                    <div className="h-5 w-5">
-                        {item.isAvailable ? (
-                        <input
-                            type="checkbox"
-                            className="h-5 w-5 rounded-full cursor-pointer accent-zinc-800"
-                            checked={item.isSelected}
-                            onChange={() => handleCheckboxChange(index)}
-                        />
-                        ) : (
-                        <button 
-                            onClick={(e) => handleDelete(e, item)}
-                        >
-                            <Trash2 size={20} className="text-zinc-500" />
-                        </button>
-                        )}
-                    </div>
+<div id="cart-items" className="flex-1 overflow-y-auto px-6 relative">
+  {list.length === 0 ? (
+    <div className="flex flex-col items-center justify-center h-full gap-4">
+      <p className="text-xl text-gray-500">Your cart is empty</p>
+      <button 
+        onClick={() => router.push('/store')}
+        className="flex items-center gap-2 bg-zinc-800 text-white px-6 py-2 rounded-lg hover:bg-black transition-colors"
+      >
+        <ShoppingBasket size={20} />
+        <span>Visit the store</span>
+      </button>
+    </div>
+  ) : (
+    <div className="grid gap-2 pb-4 relative">
+      {list.map((item, index) => (
+        <CartItem
+          key={index}
+          item={item}
+          index={index}
+          onDelete={(item) => handleDelete(null, item)}
+          onCheckboxChange={handleCheckboxChange}
+        />
+      ))}
 
-                    {/* Item Image */}
-                    <img
-                    src={item.img}
-                    alt={item.title}
-                    className={`w-20 h-20 object-cover rounded-lg ${!item.isAvailable ? "grayscale opacity-50" : ""}`}
-                    />
+      {/* Scroll to top button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-24 right-6 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow"
+        >
+          <ArrowUp size={20} />
+        </button>
+      )}
+    </div>
+  )}
+</div>
 
-                    {/* Item Details */}
-                    <div className="flex flex-col flex-1 line-clamp-2">
-                    <b className="text-lg truncate">{item.title}</b>
-                    <p className="text-gray-500 text-sm overflow-hidden text-ellipsis line-clamp-2">{item.description}</p>
-                    </div>
-
-                    {/* Price and Request Button */}
-                    <div className="flex flex-col items-center justify-center gap-2 min-w-[100px] shrink-0">
-                    <p className="text-lg font-semibold">{item.price}</p>
-                    {/* {!item.isAvailable && (
-                        <button 
-                            className="px-4 py-2 text-sm bg-zinc-100 hover:bg-zinc-200 rounded-lg transition-colors"
-                            onClick={(e) => handleRequest(e, item)}
-                        >
-                        Request
-                        </button>
-                    )} */}
-                    </div>
-                </div>
-                </div>
-            ))}
-            </div>
-        )}
-
-        {/* Scroll to top button */}
-        {showScrollTop && (
-            <button
-            onClick={scrollToTop}
-            className="fixed bottom-24 right-6 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow"
-            >
-            <ArrowUp size={20} />
-            </button>
-        )}
-        </div>
-
-        {/* Summary Section */}
-        <div className="sticky p-4 border-t border-gray-200 bg-white bottom-0">
-            <div className="flex justify-between items-center mb-4">
-                <p className="text-lg">
-                        Items selected: {selectedList.length}
-                </p>
-                <p className="text-lg font-semibold">
-                    Total: $
-                    {selectedList
-                        .reduce((total, item) => total + parseFloat(item.price.slice(1)), 0)
-                        .toFixed(2)}
-                </p>
-            </div>
-            <button
-                className="w-full bg-zinc-800 hover:bg-black text-white py-2 rounded-lg text-lg font-semibold"
-                onClick={handleCheckout}                >
-                Checkout
-            </button>
-        </div>
+{/* Summary Section */}
+<div className="sticky p-4 border-t border-gray-200 bg-white bottom-0">
+  <div className="flex justify-between items-center mb-4">
+    <p className="text-lg">
+      Items selected: {selectedList.length}
+    </p>
+    <p className="text-lg font-semibold">
+      Total: $
+      {selectedList
+        .reduce((total, item) => total + parseFloat(item.price.slice(1)), 0)
+        .toFixed(2)}
+    </p>
+  </div>
+  <button
+    className="w-full bg-zinc-800 hover:bg-black text-white py-2 rounded-lg text-lg font-semibold"
+    onClick={handleCheckout}
+  >
+    Checkout
+  </button>
+</div>
 
       </SidebarInset>
     </SidebarProvider>
