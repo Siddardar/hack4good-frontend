@@ -1,16 +1,5 @@
 "use client"
 
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-
 import { format } from "date-fns"
 import { useRouter } from "next/navigation"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -28,7 +17,7 @@ export function DatesTable({ dateRanges }: DatesTableProps) {
     const toString = new Date(to).toISOString()
 
     try {
-      const response = fetch(`http://localhost:8080/date-ranges/${id}`, {
+      fetch(`http://localhost:8080/date-ranges/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
