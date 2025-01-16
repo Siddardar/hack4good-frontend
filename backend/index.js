@@ -1,5 +1,6 @@
 const express = require("express");
 const { admin } = require("./admin"); 
+const { exportToExcel } = require('./exportToExcel');
 const bodyParser = require("body-parser");
 require('dotenv').config();
 
@@ -205,6 +206,7 @@ app.put("/date-ranges/:id", async (req, res) => {
   }
 });
 
+app.get('/export-report', exportToExcel);
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
