@@ -84,7 +84,7 @@ const initialData: TaskInfo[] = [
   },
 ]
 
-export function DataTable() {
+export function FinishedTasksTable() {
   const [tableData, setTableData] = React.useState<TaskInfo[]>(initialData)
 
   const updateTaskStatus = React.useCallback(
@@ -131,12 +131,12 @@ export function DataTable() {
         accessorKey: "status",
         header: () => <div>Status</div>,
         cell: ({ row }) => <div>{row.getValue("status")}</div>,
-        filterFn: (row, col, value) => {
-          if (!value || value.length === 0) {
-            return true
-          }
+        filterFn:(row, col, value) => {
+            if (!value || value.length === 0) {
+                return true
+            }
 
-          return value.includes(row.getValue(col))
+            return value.includes(row.getValue(col))
         }
       },
       {
@@ -255,7 +255,7 @@ export function DataTable() {
     },
     initialState: {
       pagination: {
-        pageSize: initialData.length,
+        pageSize: 4,
       },
     },
   })
@@ -267,48 +267,51 @@ export function DataTable() {
   return (
     <div className="w-full">
       {/* Filters + Columns Dropdown */}
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Filter tasks by name..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+      <div className="flex items-center justify-between py-4">
+  <div className="flex flex-col w-full max-w-lg">
+    <div className="ml-1 mb-2 text-lg font-semibold">All Tasks</div>
+    <Input
+      placeholder="Filter tasks by name..."
+      value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+      onChange={(event) =>
+        table.getColumn("name")?.setFilterValue(event.target.value)
+      }
+      className="w-full"
+    />
+  </div>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+        <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
-              Status <ChevronDown />
+            Status <ChevronDown />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
             {possibleStatuses.map((status) => {
-              const checked = statusSelection.includes(status)
-              return (
+            const checked = statusSelection.includes(status)
+            return (
                 <DropdownMenuCheckboxItem
-                  key={status}
-                  className="capitalize"
-                  checked={checked}
-                  onCheckedChange={(value) => {
+                key={status}
+                className="capitalize"
+                checked={checked}
+                onCheckedChange={(value) => {
                     setStatusSelection((prev) => {
-                      if (value) {
+                    if (value) {
                         return [...prev, status]
-                      } else {
+                    } else {
                         return prev.filter((s) => s !== status)
-                      }
+                    }
                     })
-                  }}
-                  onSelect={(event) => {
+                }}
+                onSelect={(event) => {
                     event.preventDefault()
-                  }
-                  }
+                }
+                }
                 >
-                  {status}
+                {status}
                 </DropdownMenuCheckboxItem>
-              )
+            )
             })}
-          </DropdownMenuContent>
+        </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
@@ -323,9 +326,9 @@ export function DataTable() {
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -365,6 +368,24 @@ export function DataTable() {
         <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.
+        </div>
+        <div className="space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
         </div>
       </div>
     </div>

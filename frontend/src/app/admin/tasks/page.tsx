@@ -14,7 +14,8 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 
-import { DataTable } from "./table"
+import { FinishedTasksTable } from "./table-finished-tasks"
+import { AllTasksTable } from "./table-all-tasks"
 
 export default function Page() {
   return (
@@ -41,7 +42,8 @@ export default function Page() {
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-            <DataTable />
+            <FinishedTasksTable />
+            <AllTasksTable />
         </div>
       </SidebarInset>
     </SidebarProvider>
