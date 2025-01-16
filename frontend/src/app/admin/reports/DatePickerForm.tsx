@@ -46,7 +46,6 @@ export function DatePickerForm() {
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
     const { from, to } = data.dateRange;
-    const { from, to } = data.dateRange;
 
     const payload = {
       from: from.toISOString(),
