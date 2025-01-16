@@ -1,6 +1,7 @@
 const express = require("express");
 const { admin } = require("./admin");
 const bodyParser = require("body-parser");
+const checkAdmin = require("./middleware");
 require("dotenv").config();
 
 const app = express();
@@ -107,7 +108,7 @@ app.post("/delete/:collectionName", async (req, res) => {
 });
 
 // Add tasks route
-app.post("/add-task", async (req, res) => {
+app.post("/add-task", checkAdmin, async (req, res) => {
   const collection = client.db("hack4good").collection("voucher-tasks");
   const { dateAdded, desc, reward, staffName } = req.body;
   try {
