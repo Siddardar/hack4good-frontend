@@ -19,8 +19,8 @@ import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Card, CardBody, CardFooter, Image } from "@nextui-org/react";
-import { GoSearch } from "react-icons/go";
 import { ShoppingCart, Check, Receipt } from 'lucide-react';
+import { SearchBar } from "@/components/ui/search-bar";
 
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -97,7 +97,7 @@ export default function Page() {
           </div>
         </header>
 
-        <div className="px-4">
+        <div className="px-6">
           <div className="flex justify-end gap-3 items-center mb-4">
             {/* Balance Box */}
             <div className="flex items-center gap-3 bg-gray-100 rounded-lg p-2">
@@ -108,28 +108,23 @@ export default function Page() {
             </div>
 
             {/* Cart Button */}
-            <button className="flex items-center gap-3 bg-gray-100 rounded-lg p-2 hover:bg-gray-200 transition-colors">
+            <button 
+              onClick={() => router.push('/cart')}
+              className="flex items-center gap-3 bg-gray-100 rounded-lg p-2 hover:bg-gray-200 transition-colors"
+            >
               <ShoppingCart size={24} />
               <span>Cart (0)</span>
             </button>
             </div>
           </div>
 
-
-        <div className="px-4 pb-4">
-          {/* Search bar with icon on the left */}
-          <div className="flex border border-gray-300 rounded-3xl">
-          <button className="ml-2 p-3 flex items-center justify-center">
-            <GoSearch size={20} color="gray-300" />
-          </button>
-          <input
-            type="text"
-            placeholder="Search for items..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full p-2 focus:outline-none focus:ring-0"
-          />
-          </div>
+        {/* Search bar */}
+        <div className="pb-2 p-1 z-50">
+          <SearchBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            placeholder="Search in store..."
+          />  
         </div>
 
         {/* Centered feedback message */}
@@ -142,9 +137,9 @@ export default function Page() {
           </div>
         )}
 
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="flex flex-1 flex-col gap-4 p-6 pt-0">
           {/* Card Grid */}
-          <div className="gap-5 grid grid-cols-2 sm:grid-cols-3">
+          <div className="gap-3 grid grid-cols-2 sm:grid-cols-3">
             {filteredList.map((item, index) => (
               /* eslint-disable no-console */
               <Card
