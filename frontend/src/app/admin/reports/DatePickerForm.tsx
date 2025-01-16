@@ -1,11 +1,11 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { format } from "date-fns"
+import { useRouter } from "next/navigation"
+import { CalendarIcon } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
 import { cn } from "@/lib/utils";
 import { toast } from "@/components/hooks/use-toast";
@@ -38,27 +38,68 @@ const FormSchema = z.object({
 });
 
 export function DatePickerForm() {
-  const router = useRouter();
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-  });
+  })
 
-  // function onSubmit(data: z.infer<typeof FormSchema>) {
-  //   toast({
-  //     title: "You submitted the following values:",
-  //     description: (
-  //       <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-  //         <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-  //       </pre>
-  //     ),
-  //   })
-  // }
+  const router = useRouter()  
+
   function onSubmit(data: z.infer<typeof FormSchema>) {
     const { from, to } = data.dateRange;
+    const { from, to } = data.dateRange;
 
-    router.push(
-      `/admin/reports/report?from=${from.toISOString()}&to=${to.toISOString()}`
-    );
+    const payload = {
+      from: from.toISOString(),
+      to: to.toISOString(),
+      accessed_at: new Date().toISOString(),
+    };
+
+    fetch("http://localhost:8080/date-ranges/check", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to check if date range exists");
+        }
+        return response.json();
+      })
+      .then((result) => {
+        if (result.exists) {
+          return fetch(`http://localhost:8080/date-ranges/${result.id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              accessed_at: new Date().toISOString(),
+            }),
+          });
+        } else {
+          return fetch("http://localhost:8080/date-ranges", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+        }
+      })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to update or add date range");
+        }
+        return response.json();
+      })
+      .then(() => {
+        router.push(`/admin/reports/report?from=${from.toISOString()}&to=${to.toISOString()}`);
+      })
+      .catch((error) => {
+        console.error(error.message);
+      });
   }
 
   return (
