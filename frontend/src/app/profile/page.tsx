@@ -55,9 +55,9 @@ export default function Page() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const tempUser = sessionStorage.getItem("user");
-  const tempEmail = sessionStorage.getItem("user") + "@random.com";
-  const userSession = sessionStorage.getItem("user");
+  const tempUser = localStorage.getItem("user");
+  const tempEmail = localStorage.getItem("user") + "@random.com";
+  const userlocal = localStorage.getItem("user");
   const currentUser = auth.currentUser;
   const router = useRouter();
   console.log({ user });
@@ -105,10 +105,10 @@ export default function Page() {
   // };
 
   useEffect(() => {
-    if (!user && !userSession) {
+    if (!user && !userlocal) {
       router.push("/login");
     }
-  }, [userSession]);
+  }, [userlocal]);
 
   return (
     <SidebarProvider>

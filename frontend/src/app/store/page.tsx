@@ -20,26 +20,58 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Card, CardBody, CardFooter, Image } from "@nextui-org/react";
 import { GoSearch } from "react-icons/go";
-import { ShoppingCart, Check, Receipt } from 'lucide-react';
+import { ShoppingCart, Check, Receipt } from "lucide-react";
 
 import { onAuthStateChanged } from "firebase/auth";
 
 export default function Page() {
   const [user] = useAuthState(auth);
   const router = useRouter();
-  const userSession = sessionStorage.getItem("user");
+  const userlocal = localStorage.getItem("user");
   const list = [
-    { title: "Orange", img: "https://nextui.org/images/fruit-1.jpeg", price: "$5.50" },
-    { title: "Tangerine", img: "https://nextui.org/images/fruit-1.jpeg", price: "$3.00" },
-    { title: "Raspberry", img: "https://nextui.org/images/fruit-1.jpeg", price: "$10.00" },
-    { title: "Lemon", img: "https://nextui.org/images/fruit-1.jpeg", price: "$5.30" },
-    { title: "Avocado", img: "https://nextui.org/images/fruit-1.jpeg", price: "$15.70" },
-    { title: "Lemon 2", img: "https://nextui.org/images/fruit-1.jpeg", price: "$8.00" },
-    { title: "Banana", img: "https://nextui.org/images/fruit-1.jpeg", price: "$7.50" },
-    { title: "Watermelon", img: "https://nextui.org/images/fruit-1.jpeg", price: "$12.20" },
+    {
+      title: "Orange",
+      img: "https://nextui.org/images/fruit-1.jpeg",
+      price: "$5.50",
+    },
+    {
+      title: "Tangerine",
+      img: "https://nextui.org/images/fruit-1.jpeg",
+      price: "$3.00",
+    },
+    {
+      title: "Raspberry",
+      img: "https://nextui.org/images/fruit-1.jpeg",
+      price: "$10.00",
+    },
+    {
+      title: "Lemon",
+      img: "https://nextui.org/images/fruit-1.jpeg",
+      price: "$5.30",
+    },
+    {
+      title: "Avocado",
+      img: "https://nextui.org/images/fruit-1.jpeg",
+      price: "$15.70",
+    },
+    {
+      title: "Lemon 2",
+      img: "https://nextui.org/images/fruit-1.jpeg",
+      price: "$8.00",
+    },
+    {
+      title: "Banana",
+      img: "https://nextui.org/images/fruit-1.jpeg",
+      price: "$7.50",
+    },
+    {
+      title: "Watermelon",
+      img: "https://nextui.org/images/fruit-1.jpeg",
+      price: "$12.20",
+    },
   ];
-  const [searchQuery, setSearchQuery] = useState(""); 
-  const [filteredList, setFilteredList] = useState(list); 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredList, setFilteredList] = useState(list);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const handleCardClick = (item) => {
@@ -51,11 +83,11 @@ export default function Page() {
     setShowFeedback(true);
 
     // Cart animation
-    const cartIcon = e.currentTarget.querySelector('svg');
-    cartIcon.style.transform = 'scale(0.8)';
-    
+    const cartIcon = e.currentTarget.querySelector("svg");
+    cartIcon.style.transform = "scale(0.8)";
+
     setTimeout(() => {
-      cartIcon.style.transform = 'scale(1)';
+      cartIcon.style.transform = "scale(1)";
       setIsAnimating(false);
     }, 200);
 
@@ -65,11 +97,10 @@ export default function Page() {
   };
 
   useEffect(() => {
-    if (!user && !userSession) {
+    if (!user && !userlocal) {
       router.push("/login");
     }
-
-  }, [userSession]);
+  }, [userlocal]);
 
   useEffect(() => {
     setFilteredList(
@@ -112,23 +143,22 @@ export default function Page() {
               <ShoppingCart size={24} />
               <span>Cart (0)</span>
             </button>
-            </div>
           </div>
-
+        </div>
 
         <div className="px-4 pb-4">
           {/* Search bar with icon on the left */}
           <div className="flex border border-gray-300 rounded-3xl">
-          <button className="ml-2 p-3 flex items-center justify-center">
-            <GoSearch size={20} color="gray-300" />
-          </button>
-          <input
-            type="text"
-            placeholder="Search for items..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full p-2 focus:outline-none focus:ring-0"
-          />
+            <button className="ml-2 p-3 flex items-center justify-center">
+              <GoSearch size={20} color="gray-300" />
+            </button>
+            <input
+              type="text"
+              placeholder="Search for items..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full p-2 focus:outline-none focus:ring-0"
+            />
           </div>
         </div>
 
@@ -157,7 +187,7 @@ export default function Page() {
                   <Image
                     alt={item.title}
                     className="w-full object-cover h-[180px]"
-                    radius="lg" 
+                    radius="lg"
                     src={item.img}
                     width="100%"
                   />
@@ -167,8 +197,8 @@ export default function Page() {
                     <b>{item.title}</b>
                     <p className="text-default-500 items-left">{item.price}</p>
                   </div>
-                  <button 
-                    className="flex items-center cursor-pointer mr-2 transition-transform isAnimating ? 'scale-95' : 'scale-100'" 
+                  <button
+                    className="flex items-center cursor-pointer mr-2 transition-transform isAnimating ? 'scale-95' : 'scale-100'"
                     onClick={(e) => handleAddToCart(e, item)}
                   >
                     <ShoppingCart size={24} color="gray" />
@@ -178,7 +208,6 @@ export default function Page() {
             ))}
           </div>
         </div>
-    
       </SidebarInset>
     </SidebarProvider>
   );

@@ -6,7 +6,7 @@ import { CalendarIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -27,13 +27,8 @@ import {
 } from "@/components/ui/popover";
 
 const FormSchema = z.object({
-  dateRange: z.object({
-    from: z.date({
-      required_error: "Start date is required.",
-    }),
-    to: z.date({
-      required_error: "End date is required.",
-    }),
+  date: z.date({
+    required_error: "Date is required.",
   }),
 });
 
@@ -54,67 +49,56 @@ export function DatePickerForm() {
   //   })
   // }
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    const { from, to } = data.dateRange;
-
-    router.push(
-      `/admin/reports/report?from=${from.toISOString()}&to=${to.toISOString()}`
-    );
+    const { date } = data;
   }
 
+  const [popoverOpen, setPopoverOpen] = useState(false);
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className={cn("flex flex-col gap-6")}
+      >
         <FormField
           control={form.control}
-          name="dateRange"
+          name="date"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Generate a new report</FormLabel>
-              <Popover>
+            <FormItem>
+              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
                       variant={"outline"}
                       className={cn(
                         "w-[300px] justify-start text-left font-normal",
-                        !field.value?.from && "text-muted-foreground"
+                        !field.value && "text-muted-foreground"
                       )}
                     >
                       <CalendarIcon />
-                      {field.value?.from ? (
-                        field.value.to ? (
-                          <>
-                            {format(field.value.from, "LLL dd, y")} -{" "}
-                            {format(field.value.to, "LLL dd, y")}
-                          </>
-                        ) : (
-                          format(field.value.from, "LLL dd, y")
-                        )
+                      {field.value ? (
+                        format(field.value, "LLL dd, y")
                       ) : (
-                        <span>Pick a date range</span>
+                        <span>Pick a date</span>
                       )}
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0">
                   <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={field.value?.from}
+                    mode="single"
                     selected={field.value}
-                    onSelect={field.onChange}
-                    numberOfMonths={2}
+                    onSelect={(date: any) => {
+                      field.onChange(date);
+                      setPopoverOpen(false);
+                    }}
+                    autoFocus
                   />
                 </PopoverContent>
               </Popover>
-              <FormDescription>
-                Your selected date range will be used for the report.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit">Generate</Button>
       </form>
     </Form>
   );
