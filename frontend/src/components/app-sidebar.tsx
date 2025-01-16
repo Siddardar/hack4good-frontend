@@ -79,6 +79,10 @@ const data = {
       icon: Lock,
       items: [
         {
+          title: "Inventory",
+          url: "/admin/inventory",
+        },
+        {
           title: "Residents",
           url: "/admin/residents",
         },
@@ -147,7 +151,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const basePath = pathname.split("/").slice(0, 2).join("/");
 
-  const isAdmin = JSON.parse(sessionStorage.getItem("isAdmin") || "false");
+  const isAdmin = JSON.parse(localStorage.getItem("isAdmin") || "false");
 
   const updatedNavMain = data.navMain
     .filter((navItem) => isAdmin || navItem.title !== "Admin")

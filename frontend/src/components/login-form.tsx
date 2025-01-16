@@ -23,32 +23,34 @@ export function LoginForm({
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const email = username.includes("@") ? username : username + "@random.com";
+      const email = username.includes("@")
+        ? username
+        : username + "@random.com";
       const res = await signInWithEmailAndPassword(email, password);
       console.log({ res });
-  
+
       if (res) {
-        // Store user in session
-        sessionStorage.setItem("user", username);
-  
+        // Store user in local
+        localStorage.setItem("user", username);
+
         // Clear form fields
         setUsername("");
         setPassword("");
-  
+
         // Redirect to store
         router.push("/store");
-  
+
         // Check auth state and admin status
         onAuthStateChanged(auth, async (user) => {
           if (user) {
             const tokenResult = await user.getIdTokenResult();
             const token = await user.getIdToken(true);
-            console.log(token)
+            console.log(token);
             const isAdmin = !!tokenResult.claims.admin; // Ensure it's a boolean
-  
-            // Store admin status in session as a string
-            sessionStorage.setItem("isAdmin", JSON.stringify(isAdmin));
-  
+
+            // Store admin status in local as a string
+            localStorage.setItem("isAdmin", JSON.stringify(isAdmin));
+
             if (isAdmin) {
               console.log("User is an admin");
             } else {
@@ -59,9 +61,8 @@ export function LoginForm({
               maxAge: 30 * 24 * 60 * 60, // 30 days
               path: "/", // Cookie available on all routes
             });
-        
           } else {
-            if (!sessionStorage.getItem("user")) {
+            if (!localStorage.getItem("user")) {
               router.push("/login");
             }
           }

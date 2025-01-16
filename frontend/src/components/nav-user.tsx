@@ -48,7 +48,7 @@ import { destroyCookie } from "nookies";
 //     });
 // }
 
-const NAME = sessionStorage.getItem("user");
+const NAME = localStorage.getItem("user");
 const EMAIL = NAME + "@random.com";
 
 export function NavUser({
@@ -66,15 +66,14 @@ export function NavUser({
   const handleLogout = async (e: Event) => {
     e.preventDefault();
     try {
-      sessionStorage.removeItem("user");
-      sessionStorage.removeItem("isAdmin");
+      localStorage.removeItem("user");
+      localStorage.removeItem("isAdmin");
       console.log("User logged out");
       signOut(auth);
       router.push("/login");
       destroyCookie(null, "token", {
         path: "/", // Ensure the path matches where the cookie was set
       });
-  
     } catch (err) {
       console.error(err);
     }

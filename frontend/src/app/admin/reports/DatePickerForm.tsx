@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
@@ -7,10 +7,10 @@ import { CalendarIcon } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { cn } from "@/lib/utils"
-import { toast } from "@/components/hooks/use-toast"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils";
+import { toast } from "@/components/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -19,12 +19,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
+} from "@/components/ui/form";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
 
 const FormSchema = z.object({
   dateRange: z.object({
@@ -35,7 +35,7 @@ const FormSchema = z.object({
       required_error: "End date is required.",
     }),
   }),
-})
+});
 
 export function DatePickerForm() {
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -45,6 +45,7 @@ export function DatePickerForm() {
   const router = useRouter()  
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
+    const { from, to } = data.dateRange;
     const { from, to } = data.dateRange;
 
     const payload = {
@@ -157,5 +158,5 @@ export function DatePickerForm() {
         <Button type="submit">Generate</Button>
       </form>
     </Form>
-  )
+  );
 }
