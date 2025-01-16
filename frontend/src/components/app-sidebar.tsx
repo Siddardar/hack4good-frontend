@@ -79,6 +79,10 @@ const data = {
       icon: Lock,
       items: [
         {
+          title: "Inventory",
+          url: "/admin/inventory",
+        },
+        {
           title: "Residents",
           url: "/admin/residents",
         },
