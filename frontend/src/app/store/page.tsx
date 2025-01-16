@@ -20,7 +20,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Card, CardBody, CardFooter, Image } from "@nextui-org/react";
 import { GoSearch } from "react-icons/go";
-import { ShoppingCart, Check } from 'lucide-react';
+import { ShoppingCart, Check, Receipt } from 'lucide-react';
 
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -46,7 +46,6 @@ export default function Page() {
     console.log("Card clicked:", item.title);
   };
   const handleAddToCart = (e, item) => {
-    console.log("Cart clicked for:", item.title);
     console.log("Cart clicked for:", item.title);
     setIsAnimating(true);
     setShowFeedback(true);
@@ -98,15 +97,26 @@ export default function Page() {
           </div>
         </header>
 
-        <div className="p-4 justify-right">
-          {/* Balance */}
-          {/* Check cart */ }
-          <button className="item-right">
-            <ShoppingCart size={30} color="gray-300"/>
-          </button>
-        </div>
+        <div className="px-4">
+          <div className="flex justify-end gap-3 items-center mb-4">
+            {/* Balance Box */}
+            <div className="flex items-center gap-3 bg-gray-100 rounded-lg p-2">
+              <Receipt size={24} />
+              <div>
+                <div>$1,234.56</div>
+              </div>
+            </div>
 
-        <div className="p-4">
+            {/* Cart Button */}
+            <button className="flex items-center gap-3 bg-gray-100 rounded-lg p-2 hover:bg-gray-200 transition-colors">
+              <ShoppingCart size={24} />
+              <span>Cart (0)</span>
+            </button>
+            </div>
+          </div>
+
+
+        <div className="px-4 pb-4">
           {/* Search bar with icon on the left */}
           <div className="flex border border-gray-300 rounded-3xl">
           <button className="ml-2 p-3 flex items-center justify-center">
