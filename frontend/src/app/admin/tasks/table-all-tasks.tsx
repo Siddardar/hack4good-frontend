@@ -59,9 +59,6 @@ export type AllTasksInfo = {
   staffName: string
 }
 
-// --- Initial Data ---
-
-
 export function AllTasksTable() {
 
   const columns:ColumnDef<AllTasksInfo>[] = [

@@ -20,74 +20,45 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Card, CardBody, CardFooter, Image } from "@nextui-org/react";
 import { GoSearch } from "react-icons/go";
-import { ShoppingCart, Check, Receipt } from "lucide-react";
+import { ShoppingCart, Check, Receipt } from 'lucide-react';
 
 import { onAuthStateChanged } from "firebase/auth";
+
+export type StoreItem = {
+  _id: string;
+  name: string;
+  price: string;
+  img: string;
+  quantity: number;
+  dateAdded: string;
+};
+
 
 export default function Page() {
   const [user] = useAuthState(auth);
   const router = useRouter();
-  const userlocal = localStorage.getItem("user");
-  const list = [
-    {
-      title: "Orange",
-      img: "https://nextui.org/images/fruit-1.jpeg",
-      price: "$5.50",
-    },
-    {
-      title: "Tangerine",
-      img: "https://nextui.org/images/fruit-1.jpeg",
-      price: "$3.00",
-    },
-    {
-      title: "Raspberry",
-      img: "https://nextui.org/images/fruit-1.jpeg",
-      price: "$10.00",
-    },
-    {
-      title: "Lemon",
-      img: "https://nextui.org/images/fruit-1.jpeg",
-      price: "$5.30",
-    },
-    {
-      title: "Avocado",
-      img: "https://nextui.org/images/fruit-1.jpeg",
-      price: "$15.70",
-    },
-    {
-      title: "Lemon 2",
-      img: "https://nextui.org/images/fruit-1.jpeg",
-      price: "$8.00",
-    },
-    {
-      title: "Banana",
-      img: "https://nextui.org/images/fruit-1.jpeg",
-      price: "$7.50",
-    },
-    {
-      title: "Watermelon",
-      img: "https://nextui.org/images/fruit-1.jpeg",
-      price: "$12.20",
-    },
-  ];
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filteredList, setFilteredList] = useState(list);
+  const userSession = sessionStorage.getItem("user");
+
+  const [searchQuery, setSearchQuery] = useState(""); 
+
+  const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
+  const [filteredList, setFilteredList] = useState<StoreItem[]>(storeItems); 
   const [isAnimating, setIsAnimating] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
-  const handleCardClick = (item) => {
-    console.log("Card clicked:", item.title);
+  const handleCardClick = (item: StoreItem) => {
+    console.log("Card clicked:", item.name);
   };
-  const handleAddToCart = (e, item) => {
-    console.log("Cart clicked for:", item.title);
+  const handleAddToCart = (e:any, item:StoreItem) => {
+    console.log("Cart clicked for:", item.name);
     setIsAnimating(true);
     setShowFeedback(true);
 
-    // Cart animation
-    const cartIcon = e.currentTarget.querySelector("svg");
-    cartIcon.style.transform = "scale(0.8)";
-
+    // Cart animations
+    const cartIcon = e.currentTarget.querySelector('svg');
+    cartIcon.style.transform = 'scale(0.8)';
+    
     setTimeout(() => {
-      cartIcon.style.transform = "scale(1)";
+      cartIcon.style.transform = 'scale(1)';
       setIsAnimating(false);
     }, 200);
 
@@ -97,18 +68,40 @@ export default function Page() {
   };
 
   useEffect(() => {
-    if (!user && !userlocal) {
+    if (!user && !userSession) {
       router.push("/login");
     }
-  }, [userlocal]);
+
+  }, [userSession]);
 
   useEffect(() => {
-    setFilteredList(
-      list.filter((item) =>
-        item.title.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    );
-  }, [searchQuery]);
+    if (searchQuery.trim() === "") {
+      setFilteredList(storeItems);
+    } else {
+      setFilteredList(
+        storeItems.filter((item: StoreItem) =>
+          item.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      );
+    }
+  }, [searchQuery, storeItems]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch("http://localhost:8080/fetch/store");
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        setStoreItems(data);
+      } catch (error) {
+        console.error("Failed to fetch store items:", error);
+      }
+    };
+  
+    fetchData();
+  }, []);
 
   return (
     <SidebarProvider>
@@ -143,22 +136,23 @@ export default function Page() {
               <ShoppingCart size={24} />
               <span>Cart (0)</span>
             </button>
+            </div>
           </div>
-        </div>
+
 
         <div className="px-4 pb-4">
           {/* Search bar with icon on the left */}
           <div className="flex border border-gray-300 rounded-3xl">
-            <button className="ml-2 p-3 flex items-center justify-center">
-              <GoSearch size={20} color="gray-300" />
-            </button>
-            <input
-              type="text"
-              placeholder="Search for items..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full p-2 focus:outline-none focus:ring-0"
-            />
+          <button className="ml-2 p-3 flex items-center justify-center">
+            <GoSearch size={20} color="gray-300" />
+          </button>
+          <input
+            type="text"
+            placeholder="Search for items..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full p-2 focus:outline-none focus:ring-0"
+          />
           </div>
         </div>
 
@@ -185,20 +179,20 @@ export default function Page() {
               >
                 <CardBody className="overflow-visible p-0">
                   <Image
-                    alt={item.title}
+                    alt={item.name}
                     className="w-full object-cover h-[180px]"
-                    radius="lg"
+                    radius="lg" 
                     src={item.img}
                     width="100%"
                   />
                 </CardBody>
                 <CardFooter className="text-small flex justify-between items-center">
                   <div className="flex flex-col">
-                    <b>{item.title}</b>
+                    <b>{item.name}</b>
                     <p className="text-default-500 items-left">{item.price}</p>
                   </div>
-                  <button
-                    className="flex items-center cursor-pointer mr-2 transition-transform isAnimating ? 'scale-95' : 'scale-100'"
+                  <button 
+                    className="flex items-center cursor-pointer mr-2 transition-transform isAnimating ? 'scale-95' : 'scale-100'" 
                     onClick={(e) => handleAddToCart(e, item)}
                   >
                     <ShoppingCart size={24} color="gray" />
@@ -208,6 +202,7 @@ export default function Page() {
             ))}
           </div>
         </div>
+    
       </SidebarInset>
     </SidebarProvider>
   );
