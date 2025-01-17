@@ -54,6 +54,7 @@ export default function Page() {
         const fetchInventorySummary = async () => {
             const response = await fetch("http://localhost:8080/generate-inventory-summary", {
                 method: "POST",
+                credentials: "include",
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -77,6 +78,7 @@ export default function Page() {
     const exportToExcel = async () => {
         const response = await fetch('http://localhost:8080/export-report', {
             method: 'GET',
+            credentials: 'include',
         });
 
         if (response.ok) {
