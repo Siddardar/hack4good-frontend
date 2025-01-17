@@ -60,7 +60,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
-import { StoreItem } from "@/app/store/page";
+import { StoreItem } from "@/components/ui/store-item-card";
 
 import {
   AlertDialog,

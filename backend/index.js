@@ -73,7 +73,7 @@ client.connect((err) => {
 
 //Generic routes
 //Fetch route
-app.get("/fetch/:collectionName", checkAdmin, async (req, res) => {
+app.get("/fetch/:collectionName", async (req, res) => {
   const { collectionName } = req.params;
 
   const collection = client.db("hack4good").collection(collectionName);

@@ -59,7 +59,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import { StoreItem } from "@/app/store/page";
+import { StoreItem } from "@/components/ui/store-item-card";
 
 //Stick to 3 cols because of mobile view
 
