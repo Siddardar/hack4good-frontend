@@ -69,7 +69,7 @@ const CartItem: React.FC<CartItemProps> = ({
         {/* Content */}
         <div className="flex flex-col flex-1 min-w-0">
           <b className="text-md truncate w-full">{item.name}</b>
-          <p className="text-sm">${item.price}</p>
+          <p className="text-sm">${parseFloat(item.price).toFixed(2)}</p>
           <p className="text-gray-500 text-xs overflow-hidden text-ellipsis line-clamp-2">
             {item.desc}
           </p>

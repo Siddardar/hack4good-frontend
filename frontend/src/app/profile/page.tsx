@@ -55,8 +55,8 @@ export default function Page() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const tempUser = localStorage.getItem("user");
-  const tempEmail = localStorage.getItem("user") + "@random.com";
+  const tempEmail = localStorage.getItem("user");
+  const tempUser = tempEmail?.split("@")[0];
   const userlocal = localStorage.getItem("user");
   const currentUser = auth.currentUser;
   const router = useRouter();

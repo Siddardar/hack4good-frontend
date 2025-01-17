@@ -48,8 +48,8 @@ import { destroyCookie } from "nookies";
 //     });
 // }
 
-const NAME = localStorage.getItem("user");
-const EMAIL = NAME + "@random.com";
+const EMAIL = localStorage.getItem("user");
+const NAME = EMAIL?.split("@")[0];
 
 export function NavUser({
   user,

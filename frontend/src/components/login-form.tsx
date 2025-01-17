@@ -15,7 +15,7 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [signInWithEmailAndPassword] = useSignInWithEmailAndPassword(auth);
   const router = useRouter();
@@ -23,18 +23,16 @@ export function LoginForm({
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const email = username.includes("@")
-        ? username
-        : username + "@random.com";
-      const res = await signInWithEmailAndPassword(email, password);
+      const Email = email.includes("@") ? email : email + "@random.com";
+      const res = await signInWithEmailAndPassword(Email, password);
       console.log({ res });
 
       if (res) {
         // Store user in local
-        localStorage.setItem("user", username);
+        localStorage.setItem("user", Email);
 
         // Clear form fields
-        setUsername("");
+        setEmail("");
         setPassword("");
 
         // Redirect to store
@@ -47,7 +45,7 @@ export function LoginForm({
             const token = await user.getIdToken(true);
             console.log(token);
             const isAdmin = !!tokenResult.claims.admin; // Ensure it's a boolean
-            console.log(tokenResult)
+            console.log(tokenResult);
             localStorage.setItem("isAdmin", JSON.stringify(isAdmin));
 
             if (isAdmin) {
@@ -63,9 +61,8 @@ export function LoginForm({
 
             setCookie(null, "uid", user.uid, {
               maxAge: 30 * 24 * 60 * 60,
-              path: "/", 
+              path: "/",
             });
-
           } else {
             if (!localStorage.getItem("user")) {
               router.push("/login");
@@ -95,12 +92,12 @@ export function LoginForm({
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
           <Input
-            id="username"
+            id="email"
             type="text"
             placeholder="John123"
             required
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
         <div className="grid gap-2">
