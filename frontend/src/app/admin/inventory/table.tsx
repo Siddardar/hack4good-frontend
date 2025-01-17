@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useState, useEffect } from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -57,27 +58,26 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Avatar } from "@nextui-org/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { useIsMobile } from "@/hooks/use-mobile";
-import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
-import { useState } from "react";
-import { DatePickerForm } from "./DatePickerForm";
 import { StoreItem } from "@/app/store/page";
-import { set } from "date-fns";
 
 //Stick to 3 cols because of mobile view
 
-export function DataTable() {
+interface AuditLog {
+  id: string;
+  action: string;
+  user: string;
+  date: string;
+  details: string;
+  stockBefore: number;
+  stockAfter: number;
+}
+
+interface DataTableProps {
+  addAuditLog: (newLog: AuditLog) => void;
+}
+
+const DataTable: React.FC<DataTableProps> = ({ addAuditLog }) => { 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -138,15 +138,6 @@ export function DataTable() {
       ),
     },
     {
-      accessorKey: "dateAdded",
-      header: ({ column }) => {
-        return <div> Date Added </div>;
-      },
-      cell: ({ row }) => (
-        <div className="lowercase">{row.getValue("dateAdded")}</div>
-      ),
-    },
-    {
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
@@ -177,6 +168,32 @@ export function DataTable() {
   
         const handleSaveChanges = async () => {
           try {
+
+            const timestamp = new Date().toISOString();
+            const action = editItem.quantity > item.quantity ? 'Restock' : 'Adjustment';
+
+            const auditLog = {
+              id: Date.now().toString(),
+              action: action,
+              user: 'Admin',
+              date: timestamp,
+              details: action === 'Restock' 
+                ? `Restocked ${editItem.quantity - item.quantity} units of ${editItem.name}` 
+                : `Adjusted stock for ${editItem.name} (-${item.quantity - editItem.quantity} unit)`,
+              stockBefore: item.quantity,
+              stockAfter: editItem.quantity,
+            };
+
+            addAuditLog(auditLog);
+
+            await fetch("http://localhost:8080/audit", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(auditLog),
+            });
+
             console.log(editItem)
             const res = await fetch("http://localhost:8080/update-item", {
               method: "POST",
@@ -300,14 +317,6 @@ export function DataTable() {
                         }))
                       }
                     />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="date" className="text-right">
-                      Date Added
-                    </Label>
-                    <div className="col-span-3">
-                      <DatePickerForm />
-                    </div>
                   </div>
                 </div>
   
@@ -471,10 +480,6 @@ export function DataTable() {
                   onChange={(e) => setPrice(Number(e.target.value))}
                 />
               </div>
-              <div className="flex w-1/2">
-                <Label htmlFor="date">Date Added</Label>
-                <DatePickerForm />
-              </div>
             </div>
 
             <AlertDialogFooter>
@@ -548,3 +553,5 @@ export function DataTable() {
     </div>
   );
 }
+
+export default DataTable;
