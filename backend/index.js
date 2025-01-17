@@ -11,7 +11,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 //Admin routes
-app.post("/set-admin", async (req, res) => {
+app.post("/set-admin", checkAdmin, async (req, res) => {
   const { uid } = req.body;
 
   try {
@@ -23,7 +23,7 @@ app.post("/set-admin", async (req, res) => {
   }
 });
 
-app.post("/remove-admin", async (req, res) => {
+app.post("/remove-admin", checkAdmin, async (req, res) => {
   const { uid } = req.body;
 
   try {
@@ -37,7 +37,7 @@ app.post("/remove-admin", async (req, res) => {
   }
 });
 
-app.post("/create-user", async (req, res) => {
+app.post("/create-user", checkAdmin, async (req, res) => {
   const { email, password } = req.body;
   console.log(email);
   try {
@@ -74,7 +74,7 @@ client.connect((err) => {
 
 //Generic routes
 //Fetch route
-app.get("/fetch/:collectionName", async (req, res) => {
+app.get("/fetch/:collectionName", checkAdmin, async (req, res) => {
   const { collectionName } = req.params;
 
   const collection = client.db("hack4good").collection(collectionName);
@@ -87,7 +87,7 @@ app.get("/fetch/:collectionName", async (req, res) => {
 });
 
 //Delete route
-app.post("/delete/:collectionName", async (req, res) => {
+app.post("/delete/:collectionName", checkAdmin, async (req, res) => {
   const { collectionName } = req.params;
   const collection = client.db("hack4good").collection(collectionName);
   const { id } = req.body;
@@ -133,7 +133,7 @@ app.post("/add-task", checkAdmin, async (req, res) => {
 });
 
 // Add residents route
-app.post("/add-resident", async (req, res) => {
+app.post("/add-resident", checkAdmin, async (req, res) => {
   const collection = client.db("hack4good").collection("residents");
   const { amount, name, username, email, transactions, tasks, requests } =
     req.body;
@@ -174,7 +174,7 @@ app.post("/add-resident", async (req, res) => {
 });
 
 //Items routes
-app.post("/add-item", async (req, res) => {
+app.post("/add-item", checkAdmin, async (req, res) => {
   const collection = client.db("hack4good").collection("store");
   const { name, price, img, quantity, dateAdded } = req.body;
   try {
@@ -194,7 +194,7 @@ app.post("/add-item", async (req, res) => {
   }
 });
 
-app.post("/update-item", async (req, res) => {
+app.post("/update-item", checkAdmin, async (req, res) => {
   const collection = client.db("hack4good").collection("store");
   const { id, name, price, img, quantity, dateAdded } = req.body;
   try {
@@ -210,7 +210,7 @@ app.post("/update-item", async (req, res) => {
 // Report routes
 
 // Get date ranges
-app.get("/date-ranges", async (req, res) => {
+app.get("/date-ranges", checkAdmin, async (req, res) => {
   const collection = client.db("hack4good").collection("date-ranges");
 
   try {
@@ -231,7 +231,7 @@ app.get("/date-ranges", async (req, res) => {
 });
 
 // Add date range
-app.post("/date-ranges", async (req, res) => {
+app.post("/date-ranges", checkAdmin, async (req, res) => {
   const collection = client.db("hack4good").collection("date-ranges");
   const { from, to, accessed_at } = req.body;
 
@@ -253,7 +253,7 @@ app.post("/date-ranges", async (req, res) => {
 });
 
 // Check if a date range already exists
-app.post("/date-ranges/check", async (req, res) => {
+app.post("/date-ranges/check", checkAdmin, async (req, res) => {
   const collection = client.db("hack4good").collection("date-ranges");
   const { from, to } = req.body;
 
@@ -274,7 +274,7 @@ app.post("/date-ranges/check", async (req, res) => {
 });
 
 // Update a date range's accessed_at
-app.put("/date-ranges/:id", async (req, res) => {
+app.put("/date-ranges/:id", checkAdmin, async (req, res) => {
   const collection = client.db("hack4good").collection("date-ranges");
   const { id } = req.params;
   const { accessed_at } = req.body;
@@ -304,7 +304,7 @@ app.put("/date-ranges/:id", async (req, res) => {
 // Audit routes
 
 // Get audit logs
-app.get("/audit", async (req, res) => {
+app.get("/audit", checkAdmin, async (req, res) => {
   const collection = client.db("hack4good").collection("audit");
 
   try {
@@ -316,7 +316,7 @@ app.get("/audit", async (req, res) => {
   }
 });
 
-app.post("/audit", (req, res) => {
+app.post("/audit", checkAdmin, (req, res) => {
   try {
     const { id, action, user, date, details, stockBefore, stockAfter } =
       req.body;
@@ -357,7 +357,7 @@ app.post("/audit", (req, res) => {
   }
 });
 
-app.get("/export-report", exportToExcel);
+app.get("/export-report", checkAdmin, exportToExcel);
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
