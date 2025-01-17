@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect } from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -65,6 +64,7 @@ import { StoreItem } from "@/components/ui/store-item-card";
 
 interface AuditLog {
   id: string;
+  itemId: string;
   action: string;
   user: string;
   date: string;
@@ -174,6 +174,7 @@ const DataTable: React.FC<DataTableProps> = ({ addAuditLog }) => {
 
             const auditLog = {
               id: Date.now().toString(),
+              itemId: editItem.id,
               action: action,
               user: 'Admin',
               date: timestamp,

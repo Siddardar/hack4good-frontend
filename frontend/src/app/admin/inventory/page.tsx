@@ -22,6 +22,7 @@ import { AuditLogsTable } from "./AuditLogsTable";
 
 interface AuditLog {
   id: string;
+  itemId: string;
   action: string;
   user: string;
   date: string;
@@ -44,14 +45,13 @@ export default function Page() {
             credentials: "include",
           });
           const data = await response.json();
-          setAuditLogs(data); // Set the fetched logs
+          setAuditLogs(data);
       } catch (err) {
           console.error("Failed to fetch audit logs", err);
       }
   };
 
   const addAuditLog = (newLog: AuditLog) => {
-      // Update the auditLogs state by adding the new log to the beginning
       setAuditLogs((prevLogs) => [newLog, ...prevLogs]);
   };
 
