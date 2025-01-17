@@ -17,7 +17,7 @@ import {
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
-import { Check, Receipt, ShoppingCart } from "lucide-react";
+import { Check, Coins, ShoppingCart } from "lucide-react";
 import { SearchBar } from "@/components/ui/search-bar";
 import { StoreItem, StoreItemCard } from "@/components/ui/store-item-card";
 
@@ -32,6 +32,8 @@ export default function Page() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [showAddToCartFeedback, setShowAddToCartFeedback] = useState(false);
   const [showShowPreorderFeedback, setShowPreorderFeedback] = useState(false);
+
+  const [balance, setBalance] = useState(0);
 
   useEffect(() => {
     if (!user && !userSession) {
@@ -65,7 +67,24 @@ export default function Page() {
       }
     };
 
+    const fetchBalance = async () => {
+      try {
+        const res = await fetch("http://localhost:8080/check-balance", {
+          method: "POST",
+          credentials: "include",
+        });
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        setBalance(data.balance);
+      } catch (error) {
+        console.error("Failed to fetch balance:", error);
+      }
+    }
+
     fetchData();
+    fetchBalance();
   }, []);
 
   const handleCardClick = (item: StoreItem) => {
@@ -76,6 +95,7 @@ export default function Page() {
     console.log("Cart clicked for:", item.name);
     setIsAnimating(true);
     setShowAddToCartFeedback(true);
+    updateUserCart(item);
 
     // Cart animations
     const cartIcon = e.currentTarget.querySelector("svg");
@@ -95,11 +115,36 @@ export default function Page() {
     console.log("Request clicked for:", item.name);
     setIsAnimating(true);
     setShowPreorderFeedback(true);
+    
 
     setTimeout(() => {
       setShowPreorderFeedback(false);
     }, 1000);
   };
+
+  const updateUserCart = async (item: StoreItem) => {
+    item.quantity = 1;
+    try {
+      const res = await fetch("http://localhost:8080/update-cart", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(item),
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      console.log("Cart updated:", data);
+    } catch (error) {
+      console.error("Failed to update cart:", error);
+    }
+  }
+
 
   return (
     <SidebarProvider>
@@ -122,10 +167,11 @@ export default function Page() {
         <div className="px-6">
           <div className="flex justify-end gap-3 items-center mb-4">
             <div className="flex items-center gap-3 bg-gray-100 rounded-lg p-2">
-              <Receipt size={24} />
+              
               <div>
-                <div>$1,234.56</div>
+                <div>{balance}</div>
               </div>
+              <Coins size={24} />
             </div>
 
             <button
