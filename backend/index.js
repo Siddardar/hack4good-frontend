@@ -488,34 +488,74 @@ app.get("/export-report", checkAdmin, exportToExcel);
 
 app.post("/product-request", async (req, res) => {
   try {
-    const { userId, itemId, dateRequested, status } = req.body;
-
-    // Validate input fields
-    if (!userId || !itemId || !dateRequested || !status) {
+    const { userId, userEmail, itemId, itemName, dateRequested, status } = req.body;
+    
+    if (!userId || !userEmail || !itemId || !itemName || !dateRequested || !status) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const validStatuses = ["accepted", "rejected", "pending"];
+    const validStatuses = ["Accepted", "Rejected", "Pending"];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: "Invalid status" });
     }
 
     const collection = client.db("hack4good").collection("product-requests");
 
-    // Create the request object
     const newRequest = {
       userId,
+      userEmail,
       itemId,
+      itemName,
       dateRequested: new Date(dateRequested),
       status,
     };
 
-    // Insert the new request into the database
     const result = await collection.insertOne(newRequest);
 
     return res.status(201).json({ message: "Request stored successfully", requestId: result.insertedId });
   } catch (error) {
     console.error("Error creating request:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.get("/product-request", async (req, res) => {
+  try {
+    const collection = client.db("hack4good").collection("product-requests");
+
+    // Fetch all requests from the database
+    const requests = await collection.find({}).toArray();
+
+    return res.status(200).json({ requests });
+  } catch (error) {
+    console.error("Error fetching requests:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.patch("/product-requests/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ["Pending", "Approved", "Rejected", "Shipping", "Completed"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const collection = client.db("hack4good").collection("product-requests");
+    const result = await collection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    return res.status(200).json({ message: "Status updated successfully" });
+  } catch (error) {
+    console.error("Error updating status:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
