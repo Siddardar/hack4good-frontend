@@ -1,7 +1,7 @@
 **MWH SmartMart**
 
 ## Overview
-The MWH SmartMart is a web-based platform designed to streamline administrative tasks while empowering the boys aged 10–19 at Muhammadiyah Welfare Home (MWH). This system simplifies product requests, encourages positive engagement through a voucher system, and provides robust management tools for administrators.
+The MWH SmartMart is a web-based platform designed to streamline administrative tasks while empowering the boys aged 10–19 at Muhammadiyah Welfare Home (MWH). This system simplifies product requests, encourages positive engagement through a voucher system, and provides comprehensive management tools for administrators.
 
 ---
 
