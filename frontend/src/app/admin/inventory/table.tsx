@@ -337,7 +337,10 @@ const DataTable: React.FC<DataTableProps> = ({ addAuditLog }) => {
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("http://localhost:8080/fetch/store");
+        const res = await fetch("http://localhost:8080/fetch/store", {
+          method: "GET",
+          credentials: "include",
+        });
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
@@ -406,6 +409,7 @@ const DataTable: React.FC<DataTableProps> = ({ addAuditLog }) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(itemData),
+        credentials: "include",
       });
 
       const data = await res.json();

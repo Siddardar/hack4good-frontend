@@ -21,8 +21,7 @@ const checkAdmin = async (req, res, next) => {
   // }
 
   // const token = authHeader.split(" ")[1];
-
-  const token = req.header("token");
+  const token = req.cookies["token"];
   if (!token) {
     return res.status(401).send("Unauthorized");
   }

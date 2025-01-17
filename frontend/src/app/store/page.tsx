@@ -54,7 +54,7 @@ export default function Page() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("http://localhost:8080/fetch/store");
+        const res = await fetch("http://localhost:8080/store");
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }

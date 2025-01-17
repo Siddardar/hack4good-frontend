@@ -7,7 +7,15 @@ require("dotenv").config();
 
 const app = express();
 const cors = require("cors");
-app.use(cors());
+const cookieParser = require("cookie-parser");
+
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Frontend origin
+    credentials: true, // Allow cookies to be sent
+  })
+);
 app.use(bodyParser.json());
 
 //Admin routes
@@ -72,9 +80,22 @@ client.connect((err) => {
 // MongoDB routes
 
 //Generic routes
+
+//Non admin store fetch route
+app.get("/store", async (req, res) => {
+  const collection = client.db("hack4good").collection("store");
+  try {
+    const data = await collection.find({}).toArray();
+    return res.status(200).json(data);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 //Fetch route
-app.get("/fetch/:collectionName", async (req, res) => {
+app.get("/fetch/:collectionName", checkAdmin, async (req, res) => {
   const { collectionName } = req.params;
+  
 
   const collection = client.db("hack4good").collection(collectionName);
   try {

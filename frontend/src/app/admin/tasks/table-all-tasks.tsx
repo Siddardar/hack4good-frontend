@@ -165,7 +165,10 @@ export function AllTasksTable() {
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("http://localhost:8080/fetch/voucher-tasks");
+        const res = await fetch("http://localhost:8080/fetch/voucher-tasks", {
+          method: "GET",
+          credentials: "include",
+        });
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
@@ -228,6 +231,7 @@ export function AllTasksTable() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(newTask),
+      credentials: "include",
     })
 
     if (res.ok) {
@@ -257,6 +261,7 @@ export function AllTasksTable() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ id }),
+      credentials: "include",
     })
 
     if (res.ok) {

@@ -39,7 +39,10 @@ export default function Page() {
 
   const fetchAuditLogs = async () => {
       try {
-          const response = await fetch("http://localhost:8080/audit");
+          const response = await fetch("http://localhost:8080/audit", {
+            method: "GET",
+            credentials: "include",
+          });
           const data = await response.json();
           setAuditLogs(data); // Set the fetched logs
       } catch (err) {

@@ -437,7 +437,10 @@ export function DataTable() {
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("http://localhost:8080/fetch/residents");
+        const res = await fetch("http://localhost:8080/fetch/residents", {
+          method: "GET",
+          credentials: "include",
+        });
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
@@ -825,6 +828,7 @@ export function DataTable() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, name, password }),
+        credentials: "include",
       });
   
       if (!createUserResponse.ok) {
@@ -861,6 +865,7 @@ export function DataTable() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(person),
+        credentials: "include",
       });
   
       if (!addResidentResponse.ok) {
