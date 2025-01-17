@@ -125,6 +125,65 @@ app.post("/check-balance", async (req, res) => {
   }
 });
 
+//Non admin route to fetch all tasks of a resident
+app.get("/my-tasks", async (req, res) => {
+  const collection = client.db("hack4good").collection("residents");
+  const uid = req.cookies["uid"];
+  try {
+    const resident = await collection.findOne({_id: uid});
+    return res.status(200).json(resident.tasks);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/add-task", async (req, res) => {
+  const collection = client.db("hack4good").collection("residents");
+  const uid = req.cookies["uid"]; // Get the user's ID from cookies
+
+  if (!uid) {
+    return res.status(401).json({ error: "Unauthorized: UID is missing" });
+  }
+
+  try {
+    const { dateCompleted, description, status, reward } = req.body; // Extract task details from the request body
+
+    if (!dateCompleted || !description || !status || !reward) {
+      return res.status(400).json({ error: "Missing task details in the request" });
+    }
+
+    // Add the new task to the user's tasks array
+    const result = await collection.updateOne(
+      { _id: uid }, // Match the resident by UID
+      {
+        $push: {
+          tasks: req.body
+        },
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ error: "User not found or no changes made" });
+    }
+
+    return res.status(200).json({ message: "Task added successfully" });
+  } catch (error) {
+    console.error("Error adding task:", error);
+    return res.status(500).json({ error: "Failed to add task" });
+  }
+});
+
+app.get("/my-requests", async (req, res) => {
+  const collection = client.db("hack4good").collection("residents");
+  const uid = req.cookies["uid"];
+  try {
+    const resident = await collection.findOne({_id: uid});
+    return res.status(200).json(resident.requests);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 //Fetch route
 app.get("/fetch/:collectionName", checkAdmin, async (req, res) => {
   const { collectionName } = req.params;
@@ -191,8 +250,19 @@ app.post("/add-task", checkAdmin, async (req, res) => {
   }
 });
 
-// Residents route
+app.get("/fetch-tasks", async (req, res) => {
+  const collection = client.db("hack4good").collection("voucher-tasks");
 
+  try {
+    const tasks = await collection.find({}).toArray();
+
+    return res.status(200).json(tasks);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Residents route
 // Add residents route
 app.post("/add-resident", checkAdmin, async (req, res) => {
   const collection = client.db("hack4good").collection("residents");
