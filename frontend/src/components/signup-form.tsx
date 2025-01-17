@@ -54,12 +54,12 @@ export function SignupForm({
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-2xl font-bold">Register a new account</h1>
         <p className="text-balance text-sm text-muted-foreground">
-          Enter a new username and password to create an account
+          Enter a new email and password to create an account
         </p>
       </div>
       <div className="grid gap-6">
         <div className="grid gap-2">
-          <Label htmlFor="email">Username</Label>
+          <Label htmlFor="email">Email</Label>
           <Input
             id="username"
             type="text"
