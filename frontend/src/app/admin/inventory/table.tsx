@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useState, useEffect } from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -57,171 +58,26 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Avatar } from "@nextui-org/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { useIsMobile } from "@/hooks/use-mobile";
-import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
-import { useState } from "react";
-import { DatePickerForm } from "./DatePickerForm";
-
-const data: itemInfo[] = [
-  {
-    item_name: "Book",
-    item_description: "Sample book description",
-    item_quantity: 10,
-    date_added: new Date().toISOString().split("T")[0], // Format to YYYY-MM-DD
-  },
-];
-
-export type itemInfo = {
-  item_name: string;
-  item_description: string;
-  item_quantity: number;
-  date_added: string;
-};
+import { StoreItem } from "@/app/store/page";
 
 //Stick to 3 cols because of mobile view
-export const columns: ColumnDef<itemInfo>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "item_name",
-    header: ({ column }) => {
-      return <div> Name </div>;
-    },
-    cell: ({ row }) => (
-      <div className="lowercase">{row.getValue("item_name")}</div>
-    ),
-  },
-  {
-    accessorKey: "item_description",
-    header: ({ column }) => {
-      return <div> Item Description </div>;
-    },
-    cell: ({ row }) => (
-      <div className="lowercase">{row.getValue("item_description")}</div>
-    ),
-  },
-  {
-    accessorKey: "item_quantity",
-    header: ({ column }) => {
-      return <div> Quantity </div>;
-    },
-    cell: ({ row }) => (
-      <div className="lowercase">{row.getValue("item_quantity")}</div>
-    ),
-  },
-  {
-    accessorKey: "date_added",
-    header: ({ column }) => {
-      return <div> Date Added </div>;
-    },
-    cell: ({ row }) => (
-      <div className="lowercase">{row.getValue("date_added")}</div>
-    ),
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const itemId = row.original;
-      const [dialogOpen, setDialogOpen] = React.useState(false);
-      return (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={() => setDialogOpen(true)}>
-                Edit Information
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <div className="text-red-500 font-semibold">Remove Item</div>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Edit Information</DialogTitle>
-                <DialogDescription>
-                  Edit the item information below.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Item Name
-                  </Label>
-                  <Input id="item_name" className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="username" className="text-right">
-                    Description
-                  </Label>
-                  <Input id="item_description" className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="username" className="text-right">
-                    Quantity
-                  </Label>
-                  <Input id="item_quantity" className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="date" className="text-right">
-                    Date Added
-                  </Label>
-                  <div className="col-span-3">
-                    <DatePickerForm />
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit">Save changes</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </>
-      );
-    },
-  },
-];
 
-export function DataTable() {
+interface AuditLog {
+  id: string;
+  action: string;
+  user: string;
+  date: string;
+  details: string;
+  stockBefore: number;
+  stockAfter: number;
+}
+
+interface DataTableProps {
+  addAuditLog: (newLog: AuditLog) => void;
+}
+
+const DataTable: React.FC<DataTableProps> = ({ addAuditLog }) => { 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -230,10 +86,274 @@ export function DataTable() {
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const isSmallScreen = useIsMobile();
+  const [storeData, setStoreData] = React.useState<StoreItem[]>([]);
+  const [pageSize, setPageSize] = React.useState(1);
+
+  const columns: ColumnDef<StoreItem>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "name",
+      header: ({ column }) => {
+        return <div> Name </div>;
+      },
+      cell: ({ row }) => <div>{row.getValue("name")}</div>,
+    },
+    {
+      accessorKey: "price",
+      header: ({ column }) => {
+        return <div> Price </div>;
+      },
+      cell: ({ row }) => (
+        <div className="lowercase">{row.getValue("price")}</div>
+      ),
+    },
+    {
+      accessorKey: "quantity",
+      header: ({ column }) => {
+        return <div> Quantity </div>;
+      },
+      cell: ({ row }) => (
+        <div className="lowercase">{row.getValue("quantity")}</div>
+      ),
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const item = row.original;
+        const [dialogOpen, setDialogOpen] = React.useState(false);
+  
+        const [editItem, setEditItem] = React.useState({
+          id: item._id,
+          name: item.name,
+          img: item.img,
+          price: item.price,
+          quantity: item.quantity,
+          dateAdded: item.dateAdded,
+        });
+  
+        React.useEffect(() => {
+          if (!dialogOpen) {
+            setEditItem({
+              id: item._id,
+              name: item.name,
+              img: item.img,
+              price: item.price,
+              quantity: item.quantity,
+              dateAdded: item.dateAdded,
+            });
+          }
+        }, [dialogOpen, item]);
+  
+        const handleSaveChanges = async () => {
+          try {
+
+            const timestamp = new Date().toISOString();
+            const action = editItem.quantity > item.quantity ? 'Restock' : 'Adjustment';
+
+            const auditLog = {
+              id: Date.now().toString(),
+              action: action,
+              user: 'Admin',
+              date: timestamp,
+              details: action === 'Restock' 
+                ? `Restocked ${editItem.quantity - item.quantity} units of ${editItem.name}` 
+                : `Adjusted stock for ${editItem.name} (-${item.quantity - editItem.quantity} unit)`,
+              stockBefore: item.quantity,
+              stockAfter: editItem.quantity,
+            };
+
+            addAuditLog(auditLog);
+
+            await fetch("http://localhost:8080/audit", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(auditLog),
+            });
+
+            console.log(editItem)
+            const res = await fetch("http://localhost:8080/update-item", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(editItem),
+            });
+  
+            setDialogOpen(false);
+            setStoreData((prev) => prev.map((item) => (item._id === editItem.id ? { ...editItem, _id: editItem.id } : item)));
+          } catch (error) {
+            console.error("Failed to save changes", error);
+          }
+        };
+  
+        const handleDeleteItem = async (id: string) => {
+          console.log(id)
+          try {
+            const res = await fetch("http://localhost:8080/delete/store", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ id }),
+            });
+      
+            const data = await res.json();
+            console.log(data);
+      
+            setStoreData((prev) => prev.filter((item) => item._id !== id));
+          } catch (error) {
+            console.error("Failed to delete item", error);
+          }
+        }
+  
+        return (
+          <>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => setDialogOpen(true)}>
+                  Edit Information
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => handleDeleteItem(item._id)}>
+                  <div className="text-red-500 font-semibold">Remove Item</div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+  
+            {/* Dialog for editing the item */}
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Edit Information</DialogTitle>
+                  <DialogDescription>
+                    Edit the item information below.
+                  </DialogDescription>
+                </DialogHeader>
+  
+                {/* We do NOT wrap this in a <form> to avoid nested form issues */}
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="name" className="text-right">
+                      Item Name
+                    </Label>
+                    <Input
+                      id="item_name"
+                      className="col-span-3"
+                      value={editItem.name}
+                      onChange={(e) =>
+                        setEditItem((prev) => ({ ...prev, name: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="img" className="text-right">
+                      Image URL
+                    </Label>
+                    <Input
+                      id="item_description"
+                      className="col-span-3"
+                      value={editItem.img}
+                      onChange={(e) =>
+                        setEditItem((prev) => ({ ...prev, img: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="price" className="text-right">
+                      Price
+                    </Label>
+                    <Input
+                      id="item_price"
+                      className="col-span-3"
+                      value={editItem.price}
+                      onChange={(e) =>
+                        setEditItem((prev) => ({ ...prev, price: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="quantity" className="text-right">
+                      Quantity
+                    </Label>
+                    <Input
+                      id="item_quantity"
+                      className="col-span-3"
+                      type="number"
+                      value={editItem.quantity}
+                      onChange={(e) =>
+                        setEditItem((prev) => ({
+                          ...prev,
+                          quantity: Number(e.target.value),
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+  
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSaveChanges}>Save changes</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </>
+        );
+      },
+    },
+  ];
+  
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch("http://localhost:8080/fetch/store");
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        setStoreData(data);
+        setPageSize(data.length);
+      } catch (error) {
+        console.error("Failed to fetch store items:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const table = useReactTable({
-    data,
+    data: storeData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -248,78 +368,54 @@ export function DataTable() {
       columnFilters,
       columnVisibility,
       rowSelection,
-    },
+    },    
     initialState: {
       pagination: {
-        pageSize: data.length,
+        pageSize: pageSize,
+        pageIndex: 0, 
       },
     },
   });
 
-  async function createItem(
-    name: string,
-    description: string,
-    quantity: number
-  ) {
-    try {
-      const createItemResponse = await fetch(
-        "http://localhost:8080/create-user",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ name, description, quantity }),
-        }
-      );
+  React.useEffect(() => {
+    table.setPageSize(storeData.length); 
+  }, [storeData, table]);
 
-      if (!createItemResponse.ok) {
-        throw new Error("Failed to create user");
-      }
-
-      const { id: uid } = await createItemResponse.json();
-
-      // const setAdminResponse = await fetch("http://localhost:8080/set-admin", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify({ uid }),
-      // });
-
-      // if (!setAdminResponse.ok) {
-      //   throw new Error("Failed to set user as admin");
-      // }
-
-      // const adminResult = await setAdminResponse.json();
-      // console.log(adminResult.message);
-
-      return `Item created successfully: ${uid}`;
-    } catch (error) {
-      console.error("Error creating item:", error);
-      throw error;
-    }
-  }
-
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [quantity, setQuantity] = useState(0);
-  const [date, setDate] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [name, setName] = React.useState("");
+  const [url, setURL] = React.useState("");
+  const [quantity, setQuantity] = React.useState(0);
+  const [price, setPrice] = React.useState(0);
+  const [date, setDate] = React.useState("");
 
   const handleCreateItem = async () => {
-    setError(null);
-    setSuccessMessage(null);
-    setLoading(true);
+    console.log(name, url, quantity, price, date);
+
+    const itemData:StoreItem = {
+      _id: "",
+      name: name,
+      img: url,
+      quantity: quantity,
+      price: price.toString(),
+      dateAdded: date,
+    }
+
     try {
-      const message = await createItem(name, description, quantity);
-      setSuccessMessage(message);
-    } catch (err: any) {
-      setError(err.message || "Failed to create item.");
-    } finally {
-      setLoading(false);
+      const res = await fetch("http://localhost:8080/add-item", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(itemData),
+      });
+
+      const data = await res.json();
+      console.log(data);
+
+      itemData._id = data.id;
+
+      setStoreData((prev) => [...prev, itemData]);
+    } catch (error) {
+      console.error("Failed to create item", error);
     }
   };
 
@@ -328,11 +424,9 @@ export function DataTable() {
       <div className="flex items-center py-4">
         <Input
           placeholder="Filter items..."
-          value={
-            (table.getColumn("item_name")?.getFilterValue() as string) ?? ""
-          }
+          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("item_name")?.setFilterValue(event.target.value)
+            table.getColumn("name")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
@@ -349,62 +443,57 @@ export function DataTable() {
                 Enter the details of the new item.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleCreateItem();
-              }}
-            >
-              <div className="grid w-full items-center gap-4">
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="name">Item Name</Label>
-                  <Input
-                    id="item_name"
-                    placeholder="Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="email">Item Description</Label>
-                  <Input
-                    id="item_description"
-                    placeholder="Description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="email">Item Quantity</Label>
-                  <Input
-                    id="item_quantity"
-                    placeholder="Quantity"
-                    value={quantity}
-                    onChange={(e) => setQuantity(Number(e.target.value))}
-                  />
-                </div>
-                <div className="flex w-1/2">
-                  <Label htmlFor="date">Date Added</Label>
-                  <DatePickerForm />
-                </div>
+
+            {/* No <form> tag here */}
+            <div className="grid w-full items-center gap-4">
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="name">Item Name</Label>
+                <Input
+                  id="name"
+                  placeholder="Name"
+                  defaultValue={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
               </div>
-            </form>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="url">Image URL</Label>
+                <Input
+                  id="url"
+                  placeholder="Img URL"
+                  defaultValue={url}
+                  onChange={(e) => setURL(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="quantity">Item Quantity</Label>
+                <Input
+                  id="item_quantity"
+                  defaultValue={quantity}
+                  onChange={(e) => setQuantity(Number(e.target.value))}
+                />
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="price">Price</Label>
+                <Input
+                  id="price"
+                  defaultValue={price}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                />
+              </div>
+            </div>
+
             <AlertDialogFooter>
               <AlertDialogCancel className="text-red-500">
                 Cancel
               </AlertDialogCancel>
+              {/* Use onClick or any handler here */}
               <AlertDialogAction
                 className="bg-green-500"
                 onClick={handleCreateItem}
-                disabled={loading}
               >
-                {loading ? "Creating..." : "Create Item"}
+                Add item
               </AlertDialogAction>
             </AlertDialogFooter>
-            {error && <p className="text-red-500 mt-4">{error}</p>}
-            {successMessage && (
-              <p className="text-green-500 mt-4">{successMessage}</p>
-            )}
           </AlertDialogContent>
         </AlertDialog>
       </div>
@@ -437,10 +526,7 @@ export function DataTable() {
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -467,3 +553,5 @@ export function DataTable() {
     </div>
   );
 }
+
+export default DataTable;

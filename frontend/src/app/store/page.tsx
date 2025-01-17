@@ -19,75 +19,46 @@ import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Card, CardBody, CardFooter, Image } from "@nextui-org/react";
-import { GoSearch } from "react-icons/go";
-import { ShoppingCart, Check, Receipt } from "lucide-react";
+import { ShoppingCart, Check, Receipt } from 'lucide-react';
+import { SearchBar } from "@/components/ui/search-bar";
 
 import { onAuthStateChanged } from "firebase/auth";
+
+export type StoreItem = {
+  _id: string;
+  name: string;
+  price: string;
+  img: string;
+  quantity: number;
+  dateAdded: string;
+};
+
 
 export default function Page() {
   const [user] = useAuthState(auth);
   const router = useRouter();
-  const userlocal = localStorage.getItem("user");
-  const list = [
-    {
-      title: "Orange",
-      img: "https://nextui.org/images/fruit-1.jpeg",
-      price: "$5.50",
-    },
-    {
-      title: "Tangerine",
-      img: "https://nextui.org/images/fruit-1.jpeg",
-      price: "$3.00",
-    },
-    {
-      title: "Raspberry",
-      img: "https://nextui.org/images/fruit-1.jpeg",
-      price: "$10.00",
-    },
-    {
-      title: "Lemon",
-      img: "https://nextui.org/images/fruit-1.jpeg",
-      price: "$5.30",
-    },
-    {
-      title: "Avocado",
-      img: "https://nextui.org/images/fruit-1.jpeg",
-      price: "$15.70",
-    },
-    {
-      title: "Lemon 2",
-      img: "https://nextui.org/images/fruit-1.jpeg",
-      price: "$8.00",
-    },
-    {
-      title: "Banana",
-      img: "https://nextui.org/images/fruit-1.jpeg",
-      price: "$7.50",
-    },
-    {
-      title: "Watermelon",
-      img: "https://nextui.org/images/fruit-1.jpeg",
-      price: "$12.20",
-    },
-  ];
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filteredList, setFilteredList] = useState(list);
+  const userSession = sessionStorage.getItem("user");
+
+  const [searchQuery, setSearchQuery] = useState(""); 
+
+  const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
+  const [filteredList, setFilteredList] = useState<StoreItem[]>(storeItems); 
   const [isAnimating, setIsAnimating] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
-  const handleCardClick = (item) => {
-    console.log("Card clicked:", item.title);
+  const handleCardClick = (item: StoreItem) => {
+    console.log("Card clicked:", item.name);
   };
-  const handleAddToCart = (e, item) => {
-    console.log("Cart clicked for:", item.title);
+  const handleAddToCart = (e:any, item:StoreItem) => {
+    console.log("Cart clicked for:", item.name);
     setIsAnimating(true);
     setShowFeedback(true);
 
-    // Cart animation
-    const cartIcon = e.currentTarget.querySelector("svg");
-    cartIcon.style.transform = "scale(0.8)";
-
+    // Cart animations
+    const cartIcon = e.currentTarget.querySelector('svg');
+    cartIcon.style.transform = 'scale(0.8)';
+    
     setTimeout(() => {
-      cartIcon.style.transform = "scale(1)";
+      cartIcon.style.transform = 'scale(1)';
       setIsAnimating(false);
     }, 200);
 
@@ -97,18 +68,40 @@ export default function Page() {
   };
 
   useEffect(() => {
-    if (!user && !userlocal) {
+    if (!user && !userSession) {
       router.push("/login");
     }
-  }, [userlocal]);
+
+  }, [userSession]);
 
   useEffect(() => {
-    setFilteredList(
-      list.filter((item) =>
-        item.title.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    );
-  }, [searchQuery]);
+    if (searchQuery.trim() === "") {
+      setFilteredList(storeItems);
+    } else {
+      setFilteredList(
+        storeItems.filter((item: StoreItem) =>
+          item.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      );
+    }
+  }, [searchQuery, storeItems]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch("http://localhost:8080/fetch/store");
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        setStoreItems(data);
+      } catch (error) {
+        console.error("Failed to fetch store items:", error);
+      }
+    };
+  
+    fetchData();
+  }, []);
 
   return (
     <SidebarProvider>
@@ -128,7 +121,7 @@ export default function Page() {
           </div>
         </header>
 
-        <div className="px-4">
+        <div className="px-6">
           <div className="flex justify-end gap-3 items-center mb-4">
             {/* Balance Box */}
             <div className="flex items-center gap-3 bg-gray-100 rounded-lg p-2">
@@ -139,27 +132,23 @@ export default function Page() {
             </div>
 
             {/* Cart Button */}
-            <button className="flex items-center gap-3 bg-gray-100 rounded-lg p-2 hover:bg-gray-200 transition-colors">
+            <button 
+              onClick={() => router.push('/cart')}
+              className="flex items-center gap-3 bg-gray-100 rounded-lg p-2 hover:bg-gray-200 transition-colors"
+            >
               <ShoppingCart size={24} />
-              <span>Cart (0)</span>
+              <span>Cart</span>
             </button>
+            </div>
           </div>
-        </div>
 
-        <div className="px-4 pb-4">
-          {/* Search bar with icon on the left */}
-          <div className="flex border border-gray-300 rounded-3xl">
-            <button className="ml-2 p-3 flex items-center justify-center">
-              <GoSearch size={20} color="gray-300" />
-            </button>
-            <input
-              type="text"
-              placeholder="Search for items..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full p-2 focus:outline-none focus:ring-0"
-            />
-          </div>
+        {/* Search bar */}
+        <div className="pb-2 p-1 z-50">
+          <SearchBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            placeholder="Search in store..."
+          />  
         </div>
 
         {/* Centered feedback message */}
@@ -172,9 +161,9 @@ export default function Page() {
           </div>
         )}
 
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="flex flex-1 flex-col gap-4 p-6 pt-0">
           {/* Card Grid */}
-          <div className="gap-5 grid grid-cols-2 sm:grid-cols-3">
+          <div className="gap-3 grid grid-cols-2 sm:grid-cols-3">
             {filteredList.map((item, index) => (
               /* eslint-disable no-console */
               <Card
@@ -185,20 +174,20 @@ export default function Page() {
               >
                 <CardBody className="overflow-visible p-0">
                   <Image
-                    alt={item.title}
+                    alt={item.name}
                     className="w-full object-cover h-[180px]"
-                    radius="lg"
+                    radius="lg" 
                     src={item.img}
                     width="100%"
                   />
                 </CardBody>
                 <CardFooter className="text-small flex justify-between items-center">
                   <div className="flex flex-col">
-                    <b>{item.title}</b>
+                    <b>{item.name}</b>
                     <p className="text-default-500 items-left">{item.price}</p>
                   </div>
-                  <button
-                    className="flex items-center cursor-pointer mr-2 transition-transform isAnimating ? 'scale-95' : 'scale-100'"
+                  <button 
+                    className="flex items-center cursor-pointer mr-2 transition-transform isAnimating ? 'scale-95' : 'scale-100'" 
                     onClick={(e) => handleAddToCart(e, item)}
                   >
                     <ShoppingCart size={24} color="gray" />
@@ -208,6 +197,7 @@ export default function Page() {
             ))}
           </div>
         </div>
+    
       </SidebarInset>
     </SidebarProvider>
   );

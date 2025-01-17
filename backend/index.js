@@ -1,5 +1,6 @@
 const express = require("express");
-const { admin } = require("./admin");
+const { admin } = require("./admin"); 
+const { exportToExcel } = require('./exportToExcel');
 const bodyParser = require("body-parser");
 const checkAdmin = require("./middleware");
 require("dotenv").config();
@@ -98,9 +99,9 @@ app.post("/delete/:collectionName", async (req, res) => {
     });
 
     if (task.deletedCount === 1) {
-      return res.status(200).json({ message: `Task ${id} deleted.` });
+      return res.status(200).json({ message: `${collectionName} ${id} deleted.` });
     } else {
-      return res.status(404).json({ message: `Task ${id} not found.` });
+      return res.status(404).json({ message: `${collectionName} ${id} not found.` });
     }
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -163,6 +164,25 @@ app.post("/add-resident", async (req, res) => {
       message: `Resident ${resident.insertedId} added.`,
       id: resident.insertedId,
     });
+
+//Items routes
+app.post("/add-item", async (req, res) => {
+  const collection = client.db("hack4good").collection("store");
+  const { name, price, img, quantity, dateAdded} = req.body;
+  try {
+    const item = await collection.insertOne({ name, price, img, quantity, dateAdded });
+    return res.status(200).json({ message: `Item ${item.insertedId} created.` , id: item.insertedId });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/update-item", async (req, res) => {
+  const collection = client.db("hack4good").collection("store");
+  const { id, name, price, img, quantity, dateAdded } = req.body;
+  try {
+    const item = await collection.updateOne({ _id: ObjectId.createFromHexString(id) }, { $set: { name, price, img, quantity, dateAdded } });
+    return res.status(200).json({ message: `Item ${id} updated.` });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
@@ -260,6 +280,54 @@ app.put("/date-ranges/:id", async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
+
+// Audit routes
+
+// Get audit logs
+app.get("/audit", async (req, res) => {
+  const collection = client.db("hack4good").collection("audit");
+
+  try {
+    const auditLogs = await collection.find({}).toArray();
+
+    return res.status(200).json(auditLogs);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+
+app.post("/audit", (req, res) => {
+  try {
+      const { id, action, user, date, details, stockBefore, stockAfter } = req.body;
+
+      if (!id || !action || !user || !date || !details || stockBefore === undefined || stockAfter === undefined) {
+          return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const auditLog = {
+          id,
+          action,
+          user,
+          date,
+          details,
+          stockBefore,
+          stockAfter
+      };
+
+      const collection = client.db("hack4good").collection("audit");
+      collection.insertOne(auditLog);
+
+      console.log("Audit log saved:", auditLog);
+
+      res.status(201).json({ message: "Audit log created successfully", auditLog });
+  } catch (error) {
+      console.error("Error saving audit log:", error);
+      res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.get('/export-report', exportToExcel);
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => {

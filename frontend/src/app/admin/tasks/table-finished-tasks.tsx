@@ -269,7 +269,7 @@ export function FinishedTasksTable() {
       {/* Filters + Columns Dropdown */}
       <div className="flex items-center justify-between py-4">
   <div className="flex flex-col w-full max-w-lg">
-    <div className="ml-1 mb-2 text-lg font-semibold">All Tasks</div>
+    <div className="ml-1 mb-2 text-lg font-semibold">Finished Tasks</div>
     <Input
       placeholder="Filter tasks by name..."
       value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
