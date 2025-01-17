@@ -540,6 +540,40 @@ app.post("/audit", checkAdmin, (req, res) => {
 
 app.get("/export-report", checkAdmin, exportToExcel);
 
+app.post("/product-request", async (req, res) => {
+  try {
+    const { userId, itemId, dateRequested, status } = req.body;
+
+    // Validate input fields
+    if (!userId || !itemId || !dateRequested || !status) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const validStatuses = ["accepted", "rejected", "pending"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const collection = client.db("hack4good").collection("product-requests");
+
+    // Create the request object
+    const newRequest = {
+      userId,
+      itemId,
+      dateRequested: new Date(dateRequested),
+      status,
+    };
+
+    // Insert the new request into the database
+    const result = await collection.insertOne(newRequest);
+
+    return res.status(201).json({ message: "Request stored successfully", requestId: result.insertedId });
+  } catch (error) {
+    console.error("Error creating request:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
   console.log(`Server listening at port: ${port}`);
