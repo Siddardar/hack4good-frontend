@@ -60,8 +60,23 @@ import {
 import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
+import { StoreItem } from "@/app/store/page";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 
 export type ResidentInfo = {
+  _id: string;
   amount: number;
   name: string;
   username: string;
@@ -84,6 +99,7 @@ export type ResidentInfo = {
     status: string;
     amount: number;
   }[];
+  cart: StoreItem[];
 };
 
 
@@ -218,6 +234,12 @@ export function DataTable() {
                     Suspend Resident
                   </div>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <div className="text-red-500 font-semibold">
+                    Delete Resident
+                  </div>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -225,8 +247,7 @@ export function DataTable() {
                 <VisuallyHidden.Root>
                   <DialogTitle>Resident Details</DialogTitle>
                 </VisuallyHidden.Root>
-  
-                {/* Use flex on the DialogHeader. You can also apply spacing & alignment classes. */}
+
                 <DialogHeader className="flex items-center space-x-4 !flex-row !space-y-0 text-left sm:text-left">
                   <Avatar
                     size="lg"
@@ -471,6 +492,68 @@ export function DataTable() {
     }
   }, [isSmallScreen, table]);
 
+  const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+
+  const handleCreateAccount = async () => {
+
+    try {
+      const password = "password123"; 
+      
+      const createUserResponse = await fetch("http://localhost:8080/create-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, name, password }),
+      });
+  
+      if (!createUserResponse.ok) {
+        throw new Error("Failed to create user");
+      }
+      const { id: uid } = await createUserResponse.json();
+
+      const person: ResidentInfo = {
+        _id: uid,
+        amount: 0,
+        name,
+        username: name.toLowerCase().replace(" ", "_"),
+        email,
+        transactions: [],
+        tasks: [],
+        requests: [],
+        cart: [],
+      }
+
+      const res = await addUserToDatabase(person);
+
+      setData([...data, person]);
+
+    } catch (error) {
+      console.error("Failed to create user:", error);
+    }
+  };
+
+  const addUserToDatabase = async (person: ResidentInfo) => {
+    try {
+      const addResidentResponse = await fetch("http://localhost:8080/add-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(person),
+      });
+  
+      if (!addResidentResponse.ok) {
+        throw new Error("Failed to add resident");
+      }
+      return addResidentResponse;
+    } catch (error) {
+      console.error("Failed to add resident:", error);
+      return error
+    }
+  }
+
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
@@ -482,32 +565,58 @@ export function DataTable() {
           }
           className="max-w-sm"
         />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="outline" className="ml-auto">
+          Create new account
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Create a new residents account</AlertDialogTitle>
+          <AlertDialogDescription>
+            Enter the details of the new resident.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleCreateAccount();
+          }}
+        >
+          <div className="grid w-full items-center gap-4">
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor="name">Resident Name</Label>
+              <Input
+                id="name"
+                placeholder="Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor="email">Resident Email</Label>
+              <Input
+                id="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+          </div>
+        </form>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="text-red-500">Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-green-500"
+            onClick={handleCreateAccount}
+            
+          >
+            Create Account
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
       </div>
       <div className="rounded-md border">
         <Table>
