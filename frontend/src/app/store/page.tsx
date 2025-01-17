@@ -111,16 +111,60 @@ export default function Page() {
     }, 1000);
   };
 
-  const handleRequestItem = (item: StoreItem) => {
+  // const handleRequestItem = (item: StoreItem) => {
+  //   console.log("Request clicked for:", item.name);
+  //   setIsAnimating(true);
+  //   setShowPreorderFeedback(true);
+
+  //   setTimeout(() => {
+  //     setShowPreorderFeedback(false);
+  //   }, 1000);
+  // };
+
+  const handleRequestItem = async (item: StoreItem) => {
     console.log("Request clicked for:", item.name);
     setIsAnimating(true);
     setShowPreorderFeedback(true);
-    
-
+    const userId = user?.uid;
+  
+    if (!userId) {
+      console.error("User is not authenticated.");
+      return;
+    }
+  
+    const requestData = {
+      userId,
+      itemId: item._id,
+      dateRequested: new Date().toISOString(),
+      status: "pending",
+    };
+  
+    try {
+      // Call the backend API to save the request
+      const res = await fetch("http://localhost:8080/product-request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      });
+  
+      if (res.ok) {
+        const data = await res.json();
+        console.log("Request sent successfully:", data);
+      } else {
+        const errorData = await res.json();
+        console.error("Error:", errorData.message);
+      }
+    } catch (error) {
+      console.error("Failed to send request:", error);
+    }
+  
     setTimeout(() => {
       setShowPreorderFeedback(false);
     }, 1000);
   };
+  
 
   const updateUserCart = async (item: StoreItem) => {
     item.quantity = 1;

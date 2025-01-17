@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { auth } from "@/app/firebase/config";
+import { sendPasswordResetEmail } from "firebase/auth";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -72,8 +74,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-
+} from "@/components/ui/alert-dialog";
 
 export type ResidentInfo = {
   _id: string;
@@ -81,6 +82,7 @@ export type ResidentInfo = {
   name: string;
   username: string;
   email: string;
+  isSuspended: boolean;
   transactions: {
     amount: number;
     date: string;
@@ -101,7 +103,6 @@ export type ResidentInfo = {
   }[];
   cart: StoreItem[];
 };
-
 
 //Stick to 3 cols because of mobile view
 export const columns: ColumnDef<ResidentInfo>[] = [
@@ -431,7 +432,7 @@ export function DataTable() {
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const isSmallScreen = useIsMobile();
-  
+
   const [data, setData] = React.useState<ResidentInfo[]>([]);
 
   React.useEffect(() => {
@@ -453,7 +454,86 @@ export function DataTable() {
 
     fetchData();
   }, []);
-  
+
+  const suspendResident = async (id: string) => {
+    const res = await fetch("http://localhost:8080/suspend-resident", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+      credentials: "include",
+    });
+    if (res.ok) {
+      console.log("Resident suspended successfully");
+      setData((all) => {
+        const updatedData = all.map((resident) => {
+          if (resident._id === id) {
+            return { ...resident, isSuspended: true };
+          }
+          return resident;
+        });
+        return updatedData;
+      });
+    } else {
+      console.error("Failed to suspend resident");
+    }
+  };
+
+  const unSuspendResident = async (id: string) => {
+    const res = await fetch("http://localhost:8080/unsuspend-resident", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+      credentials: "include",
+    });
+    if (res.ok) {
+      console.log("Resident unsuspended successfully");
+      setData((all) => {
+        const updatedData = all.map((resident) => {
+          if (resident._id === id) {
+            return { ...resident, isSuspended: false };
+          }
+          return resident;
+        });
+        return updatedData;
+      });
+    } else {
+      console.error("Failed to unsuspend resident");
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      const res = await sendPasswordResetEmail(auth, email);
+      console.log("Password reset email sent to:", email);
+    } catch (err) {
+      const errorCode = (err as any).code;
+      const errorMessage = (err as any).message;
+    }
+  };
+
+  const deleteResident = async (id: string) => {
+    const res = await fetch("http://localhost:8080/delete/residents", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+      credentials: "include",
+    });
+    if (res.ok) {
+      console.log("Resident deleted successfully");
+      setData((prev) => {
+        const updatedData = prev.filter((resident) => resident._id !== id);
+        return updatedData;
+      });
+    } else {
+      console.error("Failed to delete resident");
+    }
+  };
 
   const columns: ColumnDef<ResidentInfo>[] = [
     {
@@ -481,14 +561,18 @@ export function DataTable() {
     {
       accessorKey: "name",
       header: "Name",
-      cell: ({ row }) => <div className="capitalize">{row.getValue("name")}</div>,
+      cell: ({ row }) => (
+        <div className="capitalize">{row.getValue("name")}</div>
+      ),
     },
     {
       accessorKey: "email",
       header: ({ column }) => {
         return <div> Email </div>;
       },
-      cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+      cell: ({ row }) => (
+        <div className="lowercase">{row.getValue("email")}</div>
+      ),
     },
     {
       accessorKey: "amount",
@@ -498,7 +582,9 @@ export function DataTable() {
             <Button
               variant="ghost"
               className="p-0 m-0 h-auto w-auto"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
             >
               <span className="flex items-center gap-1">
                 Amount
@@ -510,13 +596,13 @@ export function DataTable() {
       },
       cell: ({ row }) => {
         const amount = parseFloat(row.getValue("amount"));
-  
+
         // Format the amount as a dollar amount
         const formatted = new Intl.NumberFormat("en-US", {
           style: "currency",
           currency: "USD",
         }).format(amount);
-  
+
         return <div className="text-right font-medium mr-2.5">{formatted}</div>;
       },
     },
@@ -526,7 +612,7 @@ export function DataTable() {
       cell: ({ row }) => {
         const resident = row.original;
         const [dialogOpen, setDialogOpen] = React.useState(false);
-  
+
         return (
           <>
             <DropdownMenu>
@@ -538,7 +624,9 @@ export function DataTable() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Admin Actions</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => console.log(resident.username)}>
+                <DropdownMenuItem
+                  onClick={() => console.log(resident.username)}
+                >
                   Copy resident username
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -550,14 +638,30 @@ export function DataTable() {
                   View details
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Reset Password</DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => {
+                    resetPassword(resident.email);
+                  }}
+                >
+                  Reset Password
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => {
+                    if (resident.isSuspended) {
+                      unSuspendResident(resident._id);
+                    } else {
+                      suspendResident(resident._id);
+                    }
+                  }}
+                >
                   <div className="text-red-500 font-semibold">
-                    Suspend Resident
+                    {resident.isSuspended
+                      ? "Unsuspend Resident"
+                      : "Suspend Resident"}
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => deleteResident(resident._id)}>
                   <div className="text-red-500 font-semibold">
                     Delete Resident
                   </div>
@@ -595,7 +699,7 @@ export function DataTable() {
                     <TabsTrigger value="tasks">Tasks</TabsTrigger>
                     <TabsTrigger value="requests">Requests</TabsTrigger>
                   </TabsList>
-  
+
                   <TabsContent value="transactions">
                     <Card>
                       <CardHeader>
@@ -611,7 +715,9 @@ export function DataTable() {
                               <TableHead className="w-[100px]">Date</TableHead>
                               <TableHead>Item</TableHead>
                               <TableHead>Status</TableHead>
-                              <TableHead className="text-right">Amount</TableHead>
+                              <TableHead className="text-right">
+                                Amount
+                              </TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -632,13 +738,14 @@ export function DataTable() {
                       </CardContent>
                     </Card>
                   </TabsContent>
-  
+
                   <TabsContent value="tasks">
                     <Card>
                       <CardHeader>
                         <CardTitle>Voucher Tasks</CardTitle>
                         <CardDescription>
-                          Only tasks pending approval are shown. Oldest to newest.
+                          Only tasks pending approval are shown. Oldest to
+                          newest.
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-2 h-40 md:h-56 overflow-auto">
@@ -670,7 +777,9 @@ export function DataTable() {
                                         variant="ghost"
                                         className="h-8 w-8 p-0"
                                       >
-                                        <span className="sr-only">Open menu</span>
+                                        <span className="sr-only">
+                                          Open menu
+                                        </span>
                                         <MoreHorizontal />
                                       </Button>
                                     </DropdownMenuTrigger>
@@ -736,7 +845,9 @@ export function DataTable() {
                                         variant="ghost"
                                         className="h-8 w-8 p-0"
                                       >
-                                        <span className="sr-only">Open menu</span>
+                                        <span className="sr-only">
+                                          Open menu
+                                        </span>
                                         <MoreHorizontal />
                                       </Button>
                                     </DropdownMenuTrigger>
@@ -774,7 +885,6 @@ export function DataTable() {
             </Dialog>
           </>
         );
-  
       },
     },
   ];
@@ -803,9 +913,9 @@ export function DataTable() {
     },
   });
 
-    React.useEffect(() => {
-      table.setPageSize(data.length); 
-    }, [data, table]);
+  React.useEffect(() => {
+    table.setPageSize(data.length);
+  }, [data, table]);
 
   React.useEffect(() => {
     const emailColumn = table.getColumn("email");
@@ -818,19 +928,21 @@ export function DataTable() {
   const [email, setEmail] = React.useState("");
 
   const handleCreateAccount = async () => {
-
     try {
-      const password = "password123"; 
-      
-      const createUserResponse = await fetch("http://localhost:8080/create-user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, name, password }),
-        credentials: "include",
-      });
-  
+      const password = "password123";
+
+      const createUserResponse = await fetch(
+        "http://localhost:8080/create-user",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, name, password }),
+          credentials: "include",
+        }
+      );
+
       if (!createUserResponse.ok) {
         throw new Error("Failed to create user");
       }
@@ -842,16 +954,16 @@ export function DataTable() {
         name,
         username: name.toLowerCase().replace(" ", "_"),
         email,
+        isSuspended: false,
         transactions: [],
         tasks: [],
         requests: [],
         cart: [],
-      }
+      };
 
       const res = await addUserToDatabase(person);
 
       setData([...data, person]);
-
     } catch (error) {
       console.error("Failed to create user:", error);
     }
@@ -859,24 +971,27 @@ export function DataTable() {
 
   const addUserToDatabase = async (person: ResidentInfo) => {
     try {
-      const addResidentResponse = await fetch("http://localhost:8080/add-user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(person),
-        credentials: "include",
-      });
-  
+      const addResidentResponse = await fetch(
+        "http://localhost:8080/add-user",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(person),
+          credentials: "include",
+        }
+      );
+
       if (!addResidentResponse.ok) {
         throw new Error("Failed to add resident");
       }
       return addResidentResponse;
     } catch (error) {
       console.error("Failed to add resident:", error);
-      return error
+      return error;
     }
-  }
+  };
 
   return (
     <div className="w-full">
@@ -889,58 +1004,61 @@ export function DataTable() {
           }
           className="max-w-sm"
         />
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="outline" className="ml-auto">
-          Create new account
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Create a new residents account</AlertDialogTitle>
-          <AlertDialogDescription>
-            Enter the details of the new resident.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleCreateAccount();
-          }}
-        >
-          <div className="grid w-full items-center gap-4">
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="name">Resident Name</Label>
-              <Input
-                id="name"
-                placeholder="Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="email">Resident Email</Label>
-              <Input
-                id="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-          </div>
-        </form>
-        <AlertDialogFooter>
-          <AlertDialogCancel className="text-red-500">Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            className="bg-green-500"
-            onClick={handleCreateAccount}
-            
-          >
-            Create Account
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" className="ml-auto">
+              Create new account
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Create a new residents account
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Enter the details of the new resident.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleCreateAccount();
+              }}
+            >
+              <div className="grid w-full items-center gap-4">
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="name">Resident Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="email">Resident Email</Label>
+                  <Input
+                    id="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+            </form>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="text-red-500">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-green-500"
+                onClick={handleCreateAccount}
+              >
+                Create Account
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
       <div className="rounded-md border">
         <Table>
