@@ -126,6 +126,7 @@ export default function Page() {
     setIsAnimating(true);
     setShowPreorderFeedback(true);
     const userId = user?.uid;
+    const userEmail = user?.email || "Anonymous";
   
     if (!userId) {
       console.error("User is not authenticated.");
@@ -134,13 +135,14 @@ export default function Page() {
   
     const requestData = {
       userId,
+      userEmail,
       itemId: item._id,
+      itemName: item.name,
       dateRequested: new Date().toISOString(),
-      status: "pending",
+      status: "Pending",
     };
   
     try {
-      // Call the backend API to save the request
       const res = await fetch("http://localhost:8080/product-request", {
         method: "POST",
         headers: {
