@@ -28,9 +28,10 @@ This is designed to:
   - Streamlines voucher tracking and eliminates manual administrative work.
 
 ### 3. Automated Report Generation
-- Provides actionable insights for administrators.  
-- Tracks inventory trends, voucher usage, and behavioral patterns.  
-- Reduces time spent on generating manual reports.
+- Delivers actionable insights for administrators.
+- Monitors inventory trends and product requests within any selected date range.
+- Previously used date ranges are saved and appear at the top for quick access when used again.
+- Option to export data to Excel for seamless reporting and analysis.
 
 ---
 
@@ -62,7 +63,7 @@ This is designed to:
   - approve a voucher task,
   - reject a voucher task, or
   - change a decision that has been made previously
-- Hadle product requests: Administrators can review and update statues of product requests, they can
+- Handle product requests: Administrators can review and update statues of product requests, they can
   - approve a request
   - reject a request
   - change the shipping status of the request
