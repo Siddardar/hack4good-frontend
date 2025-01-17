@@ -39,7 +39,6 @@ app.post("/remove-admin", checkAdmin, async (req, res) => {
 
 app.post("/create-user", checkAdmin, async (req, res) => {
   const { email, password } = req.body;
-  console.log(email);
   try {
     const user = await admin.auth().createUser({
       email,
@@ -207,8 +206,32 @@ app.post("/update-item", checkAdmin, async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
-// Report routes
 
+//Add user
+app.post("/add-user", async (req, res) => {
+  const collection = client.db("hack4good").collection("residents");
+
+  try {
+    const user = await collection.insertOne(req.body);
+    return res.status(200).json({ message: `User ${user.insertedId} created.` , id: user.insertedId });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/add-admin", async (req, res) => {
+  const collection = client.db("hack4good").collection("staff");  
+  console.log(req.body.person);
+  console.log(req.body)
+  try {
+    const user = await collection.insertOne(req.body);
+    return res.status(200).json({ message: `User ${user.insertedId} created.` , id: user.insertedId });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+  
+// Report routes
 // Get date ranges
 app.get("/date-ranges", checkAdmin, async (req, res) => {
   const collection = client.db("hack4good").collection("date-ranges");

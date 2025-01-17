@@ -62,10 +62,12 @@ import { Label } from "@/components/ui/label"
 import { useIsMobile } from "@/hooks/use-mobile"
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { useState } from "react"
+import { setDate } from "date-fns"
 
 
 const data: StaffInfo[] = [
   {
+    _id: "1",
     name: "Ken Adams",
     username: "ken99",
     email: "ken99@yahoo.com",
@@ -74,79 +76,12 @@ const data: StaffInfo[] = [
 
 
 export type StaffInfo = {
+  _id : string
   name: string
   username: string
   email: string
 }
 
-
-//Stick to 3 cols because of mobile view
-export const columns: ColumnDef<StaffInfo>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "name",
-    header: "Name",
-    cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("name")}</div>
-    ),
-  },
-  {
-    accessorKey: "email",
-    header: ({ column }) => {
-      return (
-        <div> Email </div>
-      )
-    },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const staff = row.original
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            
-            <DropdownMenuItem>Reset Password</DropdownMenuItem>
-            <DropdownMenuSeparator/>
-            <DropdownMenuItem>
-              <div className="text-red-500 font-semibold">Remove Staff</div>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
-  },
-]
 
 export function DataTable() {
   const [sorting, setSorting] = React.useState<SortingState>([])
@@ -157,7 +92,92 @@ export function DataTable() {
     React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
-  const isSmallScreen = useIsMobile()
+   const [data, setData] = React.useState<StaffInfo[]>([]);
+  
+    React.useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const res = await fetch("http://localhost:8080/fetch/staff");
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          const data = await res.json();
+          setData(data);
+        } catch (error) {
+          console.error("Failed to fetch store items:", error);
+        }
+      };
+  
+      fetchData();
+    }, []);
+
+  const columns: ColumnDef<StaffInfo>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "name",
+      header: "Name",
+      cell: ({ row }) => (
+        <div className="capitalize">{row.getValue("name")}</div>
+      ),
+    },
+    {
+      accessorKey: "email",
+      header: ({ column }) => {
+        return (
+          <div> Email </div>
+        )
+      },
+      cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const staff = row.original
+  
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              
+              <DropdownMenuItem>Reset Password</DropdownMenuItem>
+              <DropdownMenuSeparator/>
+              <DropdownMenuItem>
+                <div className="text-red-500 font-semibold">Remove Staff</div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )
+      },
+    },
+  ]
+
 
   const table = useReactTable({
     data,
@@ -178,10 +198,34 @@ export function DataTable() {
     },
     initialState: {
       pagination: {
-        pageSize: data.length,
+        pageSize: 1,
       },
-    }
+    },
   })
+  
+  React.useEffect(() => {
+    table.setPageSize(data.length); 
+  }, [data, table]);
+  
+
+    
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleCreateAccount = async () => {
+
+    setLoading(true);
+
+    try {
+      const password = "SecureRandomPassword123!"; // Generate or hardcode a password
+      const message = await createAdmin(email, name, password);
+    } catch (err: any) {
+      console.log(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   async function createAdmin(email: string, name: string, password: string) {
     try {
@@ -213,36 +257,34 @@ export function DataTable() {
   
       const adminResult = await setAdminResponse.json();
       console.log(adminResult.message); 
-  
-      return `Admin user created successfully: ${uid}`;
+      const person:StaffInfo = {
+        _id: uid,
+        email: email,
+        name: name,
+        username: name.replace(" ", "_").toLowerCase()
+      }
+      console.log(person);
+      const addToDB = await fetch("http://localhost:8080/add-admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(person),
+      });
+      if (addToDB.ok) {
+        console.log("Added to DB");
+        setData([...data, person]);
+        return `Admin user created successfully: ${uid}`;
+      } else {
+        console.log("Failed to add to DB");
+      }
+      
     } catch (error) {
       console.error("Error creating admin user:", error);
       throw error;
     }
   }
-    
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  const handleCreateAccount = async () => {
-    setError(null);
-    setSuccessMessage(null);
-    setLoading(true);
-
-    try {
-      const password = "SecureRandomPassword123!"; // Generate or hardcode a password
-      const message = await createAdmin(email, name, password);
-      setSuccessMessage(message);
-    } catch (err: any) {
-      setError(err.message || "Failed to create account.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
@@ -301,11 +343,10 @@ export function DataTable() {
             onClick={handleCreateAccount}
             disabled={loading}
           >
-            {loading ? "Creating..." : "Create Account"}
+            Create Account
           </AlertDialogAction>
         </AlertDialogFooter>
-        {error && <p className="text-red-500 mt-4">{error}</p>}
-        {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}
+
       </AlertDialogContent>
     </AlertDialog>
           
