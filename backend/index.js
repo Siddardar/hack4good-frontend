@@ -78,7 +78,6 @@ client.connect((err) => {
 });
 
 // MongoDB routes
-
 //Generic routes
 
 //Non admin store fetch route
@@ -87,6 +86,40 @@ app.get("/store", async (req, res) => {
   try {
     const data = await collection.find({}).toArray();
     return res.status(200).json(data);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+//Non admin route to check availabiliy of item
+app.post("/check-availability", async (req, res) => {
+  const collection = client.db("hack4good").collection("store");
+  const { itemId } = req.body;
+  try {
+    const item = await collection.findOne({ _id: ObjectId.createFromHexString(itemId) });
+
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    if (item.quantity >= 0) {
+      return res.status(200).json({ available: true });
+    } else {
+      return res.status(200).json({ available: false });
+    }
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+//Non admin route to check balance
+app.post("/check-balance", async (req, res) => {
+  const collection = client.db("hack4good").collection("residents");
+  const uid = req.cookies["uid"];
+  try {
+    const resident = await collection.findOne({_id: uid});
+
+    return res.status(200).json({ balance: resident.amount });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
@@ -276,6 +309,122 @@ app.post("/update-item", checkAdmin, async (req, res) => {
   }
 });
 
+app.post("/update-cart", async (req, res) => {
+  const collection = client.db("hack4good").collection("residents");
+
+  const uid = req.cookies["uid"];
+
+  if (!uid) {
+    return res.status(401).json({ error: "Unauthorized: UID not provided" });
+  }
+
+  try {
+    const cartItem = req.body;
+    if (!cartItem || !cartItem._id || cartItem.quantity == null) {
+      return res.status(400).json({ error: "Invalid cart item" });
+    }
+
+    const resident = await collection.findOne({ _id: uid });
+
+    if (!resident) {
+      return res.status(404).json({ error: "Resident not found" });
+    }
+
+    const existingItem = resident.cart.find(
+      (item) => item._id === cartItem._id
+    );
+
+    if (existingItem) {
+      const result = await collection.updateOne(
+        { _id: uid, "cart._id": cartItem._id },
+        { $set: { "cart.$.quantity": existingItem.quantity + cartItem.quantity } }
+      );
+
+      if (result.modifiedCount === 0) {
+        return res.status(500).json({ error: "Failed to update cart item" });
+      }
+
+      return res.status(200).json({ message: "Cart item quantity updated", cartItem });
+    } else {
+      const result = await collection.updateOne(
+        { _id: uid }, 
+        { $push: { cart: cartItem } } 
+      );
+
+      if (result.modifiedCount === 0) {
+        return res.status(500).json({ error: "Failed to add item to cart" });
+      }
+
+      return res.status(200).json({ message: "Cart item added", cartItem });
+    }
+  } catch (error) {
+    console.error("Error updating cart:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.post("/update-whole-cart", async (req, res) => {
+  const collection = client.db("hack4good").collection("residents");
+  const uid = req.cookies["uid"];
+
+  if (!uid) {
+    return res.status(401).json({ error: "Unauthorized: UID not provided" });
+  }
+
+  try {
+    const cart = req.body;
+
+    if (!cart || !Array.isArray(cart)) {
+      return res.status(400).json({ error: "Invalid cart" });
+    }
+
+    const resident = await collection.findOne({ _id: uid });
+
+    if (!resident) {
+      return res.status(404).json({ error: "Resident not found" });
+    }
+
+    const result = await collection.updateOne(
+      { _id: uid },
+      { $set: { cart } }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(500).json({ error: "Failed to update cart" });
+    }
+
+    return res.status(200).json({ message: "Cart updated", cart });
+  } catch (error) {
+    console.error("Error updating cart:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.get("/fetch-cart", async (req, res) => {
+  const collection = client.db("hack4good").collection("residents");
+
+  // Get the uid from cookies
+  const uid = req.cookies["uid"];
+
+  if (!uid) {
+    return res.status(401).json({ error: "Unauthorized: UID not provided" });
+  }
+
+  try {
+    const resident = await collection.findOne({ _id: uid });
+
+    if (!resident) {
+      return res.status(404).json({ error: "Resident not found" });
+    }
+
+    // Respond with the cart items
+    res.status(200).json({ cart: resident.cart });
+  } catch (error) {
+    console.error("Error fetching cart:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 //Add user
 app.post("/add-user", async (req, res) => {
   const collection = client.db("hack4good").collection("residents");
@@ -303,6 +452,115 @@ app.post("/add-admin", async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });
+  }
+});
+
+
+//Checkout route
+app.post("/checkout", async (req, res) => {
+  const residentsCollection = client.db("hack4good").collection("residents");
+  const storeCollection = client.db("hack4good").collection("store");
+
+  try {
+    const { selectedItems, totalPrice } = req.body;
+    const residentId = req.cookies["uid"]; // Retrieve the resident's ID from cookies
+    if (!residentId) {
+      return res.status(401).json({ error: "Unauthorized: Resident ID missing." });
+    }
+
+    // Fetch the resident's current data
+    const resident = await residentsCollection.findOne({ _id: residentId });
+    if (!resident) {
+      return res.status(404).json({ error: "Resident not found." });
+    }
+    // Check if the resident has sufficient balance
+    if (resident.amount < totalPrice) {
+      return res.status(400).json({ error: "Insufficient balance." });
+    }
+
+    // Check availability and prepare updates for the store
+    const unavailableItems = [];
+    const storeUpdates = [];
+
+    for (const item of selectedItems) {
+      const storeItem = await storeCollection.findOne({ _id: ObjectId.createFromHexString(item._id) });
+
+      console.log(storeItem)
+      
+      if (!storeItem || storeItem.quantity < item.quantity) {
+        unavailableItems.push({
+          name: item.name,
+          requested: item.quantity,
+          available: storeItem ? storeItem.quantity : 0,
+        });
+      } else {
+        storeUpdates.push({
+          _id: item._id,
+          newQuantity: storeItem.quantity - item.quantity,
+        });
+      }
+    }
+
+    
+
+    // If any items are unavailable, abort the transaction
+    if (unavailableItems.length > 0) {
+      return res.status(400).json({
+        error: "Some items are unavailable or out of stock.",
+        unavailableItems,
+      });
+    }
+
+    // Deduct the total price from the resident's balance
+    const newBalance = resident.amount - totalPrice;
+
+    // Add the transaction record
+    const transactions = selectedItems.map((item) => ({
+      date: new Date(),
+      amount: item.price * item.quantity,
+      description: `${item.name} x ${item.quantity}`,
+      status: "Completed",
+    }));
+
+    // Perform all database updates in a single transaction
+    const session = client.startSession();
+    session.startTransaction();
+
+    try {
+      // Update the resident's cart, transactions, and balance
+      await residentsCollection.updateOne(
+        { _id: residentId },
+        {
+          $set: { cart: [] }, // Clear the cart
+          $push: { transactions: { $each: transactions } }, // Add the transaction
+          $set: { amount: newBalance }, // Update the balance
+        },
+        { session }
+      );
+
+      // Update the store items' quantities
+      for (const update of storeUpdates) {
+        await storeCollection.updateOne(
+          { _id: ObjectId.createFromHexString(update._id) },
+          { $set: { quantity: update.newQuantity } },
+          { session }
+        );
+      }
+
+      // Commit the transaction
+      await session.commitTransaction();
+      session.endSession();
+
+      return res.status(200).json({ message: "Checkout successful." });
+    } catch (error) {
+      // Roll back the transaction in case of an error
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
+    }
+  } catch (error) {
+    console.error("Checkout failed:", error);
+    return res.status(500).json({ error: "Checkout failed." });
   }
 });
 

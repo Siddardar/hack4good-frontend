@@ -47,8 +47,7 @@ export function LoginForm({
             const token = await user.getIdToken(true);
             console.log(token);
             const isAdmin = !!tokenResult.claims.admin; // Ensure it's a boolean
-
-            // Store admin status in local as a string
+            console.log(tokenResult)
             localStorage.setItem("isAdmin", JSON.stringify(isAdmin));
 
             if (isAdmin) {
@@ -61,6 +60,12 @@ export function LoginForm({
               maxAge: 30 * 24 * 60 * 60, // 30 days
               path: "/", // Cookie available on all routes
             });
+
+            setCookie(null, "uid", user.uid, {
+              maxAge: 30 * 24 * 60 * 60,
+              path: "/", 
+            });
+
           } else {
             if (!localStorage.getItem("user")) {
               router.push("/login");
