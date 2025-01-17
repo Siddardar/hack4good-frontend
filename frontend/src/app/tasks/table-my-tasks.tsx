@@ -37,13 +37,14 @@ import {
 } from "@/components/ui/table"
 
 import { useIsMobile } from "@/hooks/use-mobile"
+import { send } from "process"
 
 // --- Types ---
 export type TaskInfo = {
   _id: string
   dateCompleted: string
   description: string
-  status: "In Progress" | "Completed" | "Pending Review" | "Rejected" | "Approved"
+  status: "In Progress" | "Pending Review" | "Rejected" | "Approved"
   reward: number
   name: string
 }
@@ -81,6 +82,55 @@ export function MyTasksTable() {
     },
     []
   )
+
+  function sendForReview(task: TaskInfo): void {
+    updateTaskStatus(task._id, "Pending Review")
+    
+
+    const sendToDB = async () => {
+        try {
+            const res = await fetch("http://localhost:8080/submit-task", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+            },
+            body: JSON.stringify(task),
+            });
+            if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            const data = await res.json();
+            console.log("Updated task status:", data);
+        } catch (error) {
+            console.error("Failed to update task status:", error);
+        }
+    };
+
+    const updateTaskinDB = async () => {
+        try {
+            const res = await fetch("http://localhost:8080/update-task", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+            },
+            body: JSON.stringify({taskID: task._id, status: "Pending Review" }),
+            });
+            if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            const data = await res.json();
+            console.log("Updated task status:", data);
+        } catch (error) {
+            console.error("Failed to update task status:", error);
+        }
+    }
+
+    sendToDB();
+    updateTaskinDB();
+  }
+
 
   const columns = React.useMemo<ColumnDef<TaskInfo>[]>(
     () => [
@@ -169,26 +219,22 @@ export function MyTasksTable() {
                   <MoreHorizontal />
                 </Button>
               </DropdownMenuTrigger>
+              {task.status === "In Progress" && (
               <DropdownMenuContent align="end">
                 {/* Show the appropriate dropdown items based on task.status */}
-                {task.status === "In Progress" && (
+                
                   <>
                     <DropdownMenuItem
-                      onClick={() => updateTaskStatus(task._id, "Completed")}
+                      onClick={() => sendForReview(task)}
                     >
-                      Completed
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => updateTaskStatus(task._id, "In Progress")}
-                    >
-                      In Progress
+                      Send for review
                     </DropdownMenuItem>
                   </>
-                )}
+                
 
               </DropdownMenuContent>
-            </DropdownMenu>
+           )}
+           </DropdownMenu>
           )
         },
       },
@@ -236,7 +282,7 @@ export function MyTasksTable() {
       {/* Filters + Columns Dropdown */}
       <div className="flex items-center justify-between py-4">
   <div className="flex flex-col w-full max-w-lg">
-    <div className="ml-1 mb-2 text-lg font-semibold">Finished Tasks</div>
+    <div className="ml-1 mb-2 text-lg font-semibold">My Tasks</div>
     <Input
       placeholder="Filter tasks by name..."
       value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
