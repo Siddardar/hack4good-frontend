@@ -17,7 +17,7 @@ import {
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/app/firebase/config";
 import { useRouter } from "next/navigation";
-import { Check, Coins, ShoppingCart } from "lucide-react";
+import { Check, Ticket, ShoppingCart } from "lucide-react";
 import { SearchBar } from "@/components/ui/search-bar";
 import { StoreItem, StoreItemCard } from "@/components/ui/store-item-card";
 
@@ -213,11 +213,8 @@ export default function Page() {
         <div className="px-6">
           <div className="flex justify-end gap-3 items-center mb-4">
             <div className="flex items-center gap-3 bg-gray-100 rounded-lg p-2">
-              
-              <div>
-                <div>{balance}</div>
-              </div>
-              <Coins size={24} />
+              <Ticket size={24} />
+              <div>{balance}</div>
             </div>
 
             <button

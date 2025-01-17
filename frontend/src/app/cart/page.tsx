@@ -15,7 +15,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useRouter } from "next/navigation";
-import { ShoppingBasket, Check } from "lucide-react";
+import { ShoppingBasket, Check, Ticket } from "lucide-react";
 import CartItem from "@/components/ui/clickable-cart-item";
 import { StoreItem } from "@/components/ui/store-item-card";
 
@@ -27,6 +27,8 @@ export default function Page() {
   const [availability, setAvailability] = useState<Record<string, boolean>>({});
   const [selectedList, setSelectedList] = useState<StoreItem[]>([]);
   const [showFeedback, setShowFeedback] = useState<boolean>(false);
+
+  const [balance, setBalance] = useState(0);
 
   // Fetch cart items and availability on mount
   useEffect(() => {
@@ -64,7 +66,25 @@ export default function Page() {
       }
     };
 
+    // Fetch voucher balance
+    const fetchBalance = async () => {
+        try {
+          const res = await fetch("http://localhost:8080/check-balance", {
+            method: "POST",
+            credentials: "include",
+          });
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          const data = await res.json();
+          setBalance(data.balance);
+        } catch (error) {
+          console.error("Failed to fetch balance:", error);
+        }
+      }
+
     fetchData();
+    fetchBalance();
   }, []);
 
   // Update cart whenever the list changes
@@ -202,6 +222,10 @@ export default function Page() {
 
         <div className="px-6">
           <div className="flex justify-end gap-3 items-center mb-4">
+          <div className="flex items-center gap-3 bg-gray-100 rounded-lg p-2">
+              <Ticket size={24} />
+              <div>{balance}</div>
+            </div>
             <button
               onClick={() => router.push("/store")}
               className="flex items-center gap-3 bg-gray-100 rounded-lg p-2 hover:bg-gray-200 transition-colors"
