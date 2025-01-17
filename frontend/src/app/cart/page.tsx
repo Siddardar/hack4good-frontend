@@ -28,17 +28,26 @@ export default function Page() {
   const router = useRouter();
   const userSession = sessionStorage.getItem("user");
   const [list, setList] = useState([
-    { title: "Orange", img: "https://nextui.org/images/fruit-1.jpeg", price: 5.5, isSelected: false, isAvailable: true, quantity: 1, 
-        description: "2 kg of fresh Australian Orange " },
-    { title: "Tangerine", img: "https://nextui.org/images/fruit-1.jpeg", price: 3, isSelected: false, isAvailable: true, quantity: 1  },
-    { title: "Raspberry", img: "https://nextui.org/images/fruit-1.jpeg", price: 10, isSelected: false, quantity: 1 },
-    { title: "Lemon", img: "https://nextui.org/images/fruit-1.jpeg", price: 5.3, isSelected: false, isAvailable: true, quantity: 1  },
-    { title: "Avocado", img: "https://nextui.org/images/fruit-1.jpeg", price: 15.7, isSelected: false, isAvailable: true, quantity: 1  },
-    { title: "Lemon 2", img: "https://nextui.org/images/fruit-1.jpeg", price: 8, isSelected: false, quantity: 1 },
-    { title: "Banana", img: "https://nextui.org/images/fruit-1.jpeg", price: 7.5, isSelected: false, isAvailable: true, quantity: 1  },
-    { title: "Lemon 3", img: "https://nextui.org/images/fruit-1.jpeg", price: 9, isSelected: false, quantity: 1  },
-    { title: "Banana 2", img: "https://nextui.org/images/fruit-1.jpeg", price: 9.2, isSelected: false, isAvailable: true, quantity: 1  },
-    { title: "Watermelon", img: "https://nextui.org/images/fruit-1.jpeg", price: 12.9, isSelected: false, isAvailable: true, quantity: 1  },
+    { title: "Orange", img: "https://healthnewshub.org/wp-content/uploads/2022/10/Fruit-e1664894335635.jpg", 
+        price: 5.5, isSelected: false, isAvailable: true, quantity: 1, description: "2 kg of fresh Australian Orange " },
+    { title: "Tangerine", img: "https://healthnewshub.org/wp-content/uploads/2022/10/Fruit-e1664894335635.jpg", 
+        price: 3, isSelected: false, isAvailable: true, quantity: 1  },
+    { title: "Raspberry", img: "https://healthnewshub.org/wp-content/uploads/2022/10/Fruit-e1664894335635.jpg", 
+        price: 10, isSelected: false, quantity: 1 },
+    { title: "Lemon", img: "https://healthnewshub.org/wp-content/uploads/2022/10/Fruit-e1664894335635.jpg", 
+        price: 5.3, isSelected: false, isAvailable: true, quantity: 1  },
+    { title: "Avocado", img: "https://healthnewshub.org/wp-content/uploads/2022/10/Fruit-e1664894335635.jpg", 
+        price: 15.7, isSelected: false, isAvailable: true, quantity: 1  },
+    { title: "Lemon 2", img: "https://healthnewshub.org/wp-content/uploads/2022/10/Fruit-e1664894335635.jpg", 
+        price: 8, isSelected: false, quantity: 1 },
+    { title: "Banana", img: "https://healthnewshub.org/wp-content/uploads/2022/10/Fruit-e1664894335635.jpg", 
+        price: 7.5, isSelected: false, isAvailable: true, quantity: 1  },
+    { title: "Lemon 3", img: "https://healthnewshub.org/wp-content/uploads/2022/10/Fruit-e1664894335635.jpg", 
+        price: 9, isSelected: false, quantity: 1  },
+    { title: "Banana 2", img: "https://healthnewshub.org/wp-content/uploads/2022/10/Fruit-e1664894335635.jpg", 
+        price: 9.2, isSelected: false, isAvailable: true, quantity: 1  },
+    { title: "Watermelon", img: "https://healthnewshub.org/wp-content/uploads/2022/10/Fruit-e1664894335635.jpg", 
+        price: 12.9, isSelected: false, isAvailable: true, quantity: 1  },
   ]);
   const [selectedList, setSelectedList] = useState([]); 
   const [showScrollTop, setShowScrollTop] = useState(false);
