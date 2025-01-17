@@ -94,7 +94,7 @@ const initialData: RequestInfo[] = [
 ]
 
 export function DataTable() {
-  const [tableData, setTableData] = React.useState<RequestInfo[]>(initialData)
+  const [tableData, setTableData] = React.useState<RequestInfo[]>([])
 
   const updateReqStatus = React.useCallback(
     (requestID: number, newStatus: RequestInfo["status"]) => {
@@ -106,6 +106,27 @@ export function DataTable() {
     },
     []
   )
+
+    React.useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const res = await fetch("http://localhost:8080/fetch/product-requests", {
+            method: "GET",
+            credentials: "include",
+          });
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          const data = await res.json();
+          console.log(data)
+          setTableData(data);
+        } catch (error) {
+          console.error("Failed to fetch requests:", error);
+        }
+      };
+      fetchData();
+    }, []);
+
 
   const columns = React.useMemo<ColumnDef<RequestInfo>[]>(
     () => [
@@ -132,9 +153,9 @@ export function DataTable() {
         enableHiding: false,
       },
       {
-        accessorKey: "name",
+        accessorKey: "itemName",
         header: "Name",
-        cell: ({ row }) => <div className="capitalize">{row.getValue("name")}</div>,
+        cell: ({ row }) => <div className="capitalize">{row.getValue("itemName")}</div>,
       },
       {
         accessorKey: "status",
@@ -149,9 +170,9 @@ export function DataTable() {
         }
       },
       {
-        accessorKey: "description",
-        header: () => <div>Description</div>,
-        cell: ({ row }) => <div>{row.getValue("description")}</div>,
+        accessorKey: "dateRequested",
+        header: () => <div>Date Requested</div>,
+        cell: ({ row }) => <div>{row.getValue("dateRequested")}</div>,
       },
       {
         accessorKey: "cost",
@@ -281,10 +302,14 @@ export function DataTable() {
     },
     initialState: {
       pagination: {
-        pageSize: initialData.length,
+        pageSize: 1,
       },
     },
   })
+
+  React.useEffect(() => {
+    table.setPageSize(tableData.length)
+  }, [table, tableData])
 
   React.useEffect(() => {
     table.getColumn("status")?.setFilterValue(statusSelection)
@@ -296,9 +321,9 @@ export function DataTable() {
       <div className="flex items-center py-4">
         <Input
           placeholder="Filter requests by name..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+          value={(table.getColumn("itemName")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
+            table.getColumn("itemName")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />

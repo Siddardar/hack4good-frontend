@@ -137,6 +137,124 @@ app.get("/my-tasks", async (req, res) => {
   }
 });
 
+//Non admin route to submit completed task
+app.post("/submit-task", async (req, res) => {
+  const collection = client.db("hack4good").collection("voucher-tasks-done");
+  const uid = req.cookies["uid"]; // Get the user's ID from cookies
+
+  const names = client.db("hack4good").collection("residents");
+  const name = names.findOne({_id: uid});
+
+  if (!uid) {
+    return res.status(401).json({ error: "Unauthorized: UID is missing" });
+  }
+
+  try {
+    // Extract task data from the request body
+    const { description, status, reward } = req.body;
+
+    if (!description || !status || !reward) {
+      return res.status(400).json({ error: "Missing task details in the request" });
+    }
+
+    // Create the task object to be inserted
+    const task = {
+      uid, // Associate the task with the user's ID
+      dateCompleted: new Date(),
+      description,
+      status: "Pending Review",
+      reward,
+      name: name
+    };
+
+    // Insert the task into the collection
+    const result = await collection.insertOne(task);
+
+    if (result.insertedId) {
+      return res.status(201).json({
+        message: "Task submitted successfully",
+        taskId: result.insertedId,
+      });
+    } else {
+      throw new Error("Failed to insert task into the database");
+    }
+  } catch (error) {
+    console.error("Error submitting task:", error);
+    return res.status(500).json({ error: "Failed to submit task" });
+  }
+});
+
+app.post("/update-task", async (req, res) => {
+  const collection = client.db("hack4good").collection("residents");
+  const uid = req.cookies["uid"]; // Get the user's ID from cookies
+
+  if (!uid) {
+    return res.status(401).json({ error: "Unauthorized: UID is missing" });
+  }
+
+  try {
+    const { taskID, status } = req.body;
+    console.log(taskID, status, uid)
+
+    if (!taskID || !status) {
+      return res.status(400).json({ error: "Missing task details in the request" });
+    }
+
+    const result = await collection.updateOne(
+      { _id: uid, "tasks._id": taskID },
+      { $set: { "tasks.$.status": status , "tasks.$.dateCompleted": new Date()} }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ error: "Task not found or no changes made" });
+    }
+
+    return res.status(200).json({ message: "Task updated successfully" });
+  } catch (error) {
+    console.error("Error updating task:", error);
+    return res.status(500).json({ error: "Failed to update task" });
+  }
+});
+
+app.post("/approve-task", checkAdmin, async (req, res) => {
+  const collection = client.db("hack4good").collection("voucher-tasks-done");
+  const residents = client.db("hack4good").collection("residents");
+
+  const { taskID, status, uid } = req.body;
+
+  if (!taskID || !status || !uid) {
+    return res.status(400).json({ error: "taskID, status, and uid are required." });
+  }
+
+  try {
+    // Step 1: Update the task status in the `voucher-tasks-done` collection
+    const taskResult = await collection.updateOne(
+      { _id: ObjectId.createFromHexString(taskID) },
+      { $set: { status } }
+    );
+
+    if (taskResult.modifiedCount === 0) {
+      return res.status(404).json({ error: "Task not found or status unchanged in voucher-tasks-done." });
+    }
+
+    if (residentResult.modifiedCount === 0) {
+      console.log("hi")
+      return res.status(404).json({ error: "Task not found or status unchanged in the resident's tasks." });
+    }
+
+    // Step 3: Send success response
+    res.status(200).json({
+      message: "Task status updated successfully.",
+      taskResult,
+      residentResult,
+    });
+  } catch (error) {
+    console.error("Error updating task status:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 app.post("/add-task", async (req, res) => {
   const collection = client.db("hack4good").collection("residents");
   const uid = req.cookies["uid"]; // Get the user's ID from cookies

@@ -40,63 +40,70 @@ import { useIsMobile } from "@/hooks/use-mobile"
 
 // --- Types ---
 export type TaskInfo = {
-  taskID: number
-  dateCompleted: string
+  _id: string
+  dateCompleted: any
   description: string
-  status: "Pending" | "Approved" | "Rejected"
+  status: "Pending Review" | "Approved" | "Rejected"
   reward: number
-  name: string
+  uid: string
 }
 
-// --- Initial Data ---
-const initialData: TaskInfo[] = [
-  {
-    taskID: 1,
-    dateCompleted: "2022-01-01",
-    description: "Fed the stray cats",
-    status: "Pending",
-    reward: 100,
-    name: "Jack Doe",
-  },
-  {
-    taskID: 2,
-    dateCompleted: "2022-01-01",
-    description: "Task 2",
-    status: "Approved",
-    reward: 100,
-    name: "John Doe",
-  },
-  {
-    taskID: 3,
-    dateCompleted: "2022-01-01",
-    description: "Task 3",
-    status: "Rejected",
-    reward: 100,
-    name: "Jane Doe",
-  },
-  {
-    taskID: 4,
-    dateCompleted: "2022-01-01",
-    description: "Task 4",
-    status: "Rejected",
-    reward: 100,
-    name: "Jill Doe",
-  },
-]
 
 export function FinishedTasksTable() {
-  const [tableData, setTableData] = React.useState<TaskInfo[]>(initialData)
+  const [tableData, setTableData] = React.useState<TaskInfo[]>([])
 
   const updateTaskStatus = React.useCallback(
-    (taskID: number, newStatus: TaskInfo["status"]) => {
-      setTableData((prevData) =>
-        prevData.map((task) =>
-          task.taskID === taskID ? { ...task, status: newStatus } : task
+    async (taskID: string, newStatus: TaskInfo["status"], uid: string) => {
+      try {
+        // Step 1: Update the task status in the database
+        const res = await fetch("http://localhost:8080/approve-task", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ taskID, status: newStatus, uid }),
+        })
+  
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`)
+        }
+  
+        const data = await res.json()
+
+        setTableData((prevData) =>
+          prevData.map((task) =>
+            task._id === taskID ? { ...task, status: newStatus } : task
+          )
         )
-      )
+      } catch (error) {
+        console.error("Failed to update task status:", error)
+      } finally {
+        
+      }
     },
     []
   )
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch("http://localhost:8080/fetch/voucher-tasks-done", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        console.log(data)
+        setTableData(data);
+      } catch (error) {
+        console.error("Failed to fetch requests:", error);
+      }
+    };
+    fetchData();
+  }, []);
 
   const columns = React.useMemo<ColumnDef<TaskInfo>[]>(
     () => [
@@ -125,50 +132,50 @@ export function FinishedTasksTable() {
       {
         accessorKey: "name",
         header: "Name",
-        cell: ({ row }) => <div className="capitalize">{row.getValue("name")}</div>,
+        cell: ({ row }) => <div>{row.getValue("name")}</div>,
       },
       {
         accessorKey: "status",
-        header: () => <div>Status</div>,
+        header: "Status",
         cell: ({ row }) => <div>{row.getValue("status")}</div>,
-        filterFn:(row, col, value) => {
-            if (!value || value.length === 0) {
-                return true
-            }
-
-            return value.includes(row.getValue(col))
-        }
+        filterFn: (row, columnId, value) => {
+          if (!value || value.length === 0) return true
+          return value.includes(row.getValue(columnId))
+        },
       },
       {
         accessorKey: "description",
-        header: () => <div>Description</div>,
+        header: "Description",
         cell: ({ row }) => <div>{row.getValue("description")}</div>,
       },
       {
         accessorKey: "reward",
         header: ({ column }) => (
-          <div className="text-right">
-            <Button
-              variant="ghost"
-              className="p-0 m-0 h-auto w-auto"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              <span className="flex items-center gap-1">
-                Amount
-                <ArrowUpDown />
-              </span>
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            onClick={() =>
+              column.toggleSorting(column.getIsSorted() === "asc")
+            }
+          >
+            Amount
+            <ArrowUpDown />
+          </Button>
         ),
         cell: ({ row }) => {
-          const amount = parseFloat(row.getValue("reward"))
+          const amount = parseFloat(String(row.getValue("reward")))
           const formatted = new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: "USD",
           }).format(amount)
-          return <div className="text-right font-medium mr-2.5">{formatted}</div>
+          return <div>{formatted}</div>
+        },
+      },
+      {
+        accessorKey: "dateCompleted",
+        header: "Date Completed",
+        cell: ({ row }) => {
+          const date = new Date(row.getValue("dateCompleted"))
+          return <div>{date.toLocaleString()}</div>
         },
       },
       {
@@ -176,49 +183,42 @@ export function FinishedTasksTable() {
         enableHiding: false,
         cell: ({ row }) => {
           const task = row.original
-
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
+                <Button variant="ghost">
                   <MoreHorizontal />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {/* Show the appropriate dropdown items based on task.status */}
-                {task.status === "Pending" && (
+              <DropdownMenuContent>
+                {task.status === "Pending Review" && (
                   <>
                     <DropdownMenuItem
-                      onClick={() => updateTaskStatus(task.taskID, "Approved")}
+                      onClick={() => updateTaskStatus(task._id, "Approved", task.uid)}
                     >
                       Approve
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={() => updateTaskStatus(task.taskID, "Rejected")}
+                      onClick={() => updateTaskStatus(task._id, "Rejected",   task.uid)}
                     >
                       Reject
                     </DropdownMenuItem>
                   </>
                 )}
                 {task.status === "Approved" && (
-                  <>
-                    <DropdownMenuItem
-                      onClick={() => updateTaskStatus(task.taskID, "Rejected")}
-                    >
-                      Reject
-                    </DropdownMenuItem>
-                  </>
+                  <DropdownMenuItem
+                    onClick={() => updateTaskStatus(task._id, "Rejected",   task.uid)}
+                  >
+                    Reject
+                  </DropdownMenuItem>
                 )}
                 {task.status === "Rejected" && (
-                  <>
-                    <DropdownMenuItem
-                      onClick={() => updateTaskStatus(task.taskID, "Approved")}
-                    >
-                      Approve
-                    </DropdownMenuItem>
-                  </>
+                  <DropdownMenuItem
+                    onClick={() => updateTaskStatus(task._id, "Approved", task.uid)}
+                  >
+                    Approve
+                  </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -233,7 +233,7 @@ export function FinishedTasksTable() {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
-  const possibleStatuses = ["Pending", "Approved", "Rejected"]
+  const possibleStatuses = ["Pending Review", "Approved", "Rejected"]
   const [statusSelection, setStatusSelection] = React.useState<string[]>(possibleStatuses)
 
   const table = useReactTable({
@@ -255,10 +255,14 @@ export function FinishedTasksTable() {
     },
     initialState: {
       pagination: {
-        pageSize: 4,
+        pageSize: 1,
       },
     },
   })
+
+  React.useEffect(() => {
+    table.setPageSize(tableData.length)
+  }, [table, tableData])
 
   React.useEffect(() => {
     table.getColumn("status")?.setFilterValue(statusSelection)
