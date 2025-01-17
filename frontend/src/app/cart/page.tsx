@@ -54,14 +54,14 @@ export default function Page() {
   const [showFeedback, setShowFeedback] = useState(false);
   const totalPrice = list.reduce(
     (total, item) =>
-      item.isSelected ? total + item.price * item.quantity : total,
+      item.isSelected ? total + parseFloat(item.price) * item.quantity : total,
     0
   );
   const handleCheckboxChange = (index) => {
     const updatedList = list.map((item, i) =>
       i === index ? { ...item, isSelected: !item.isSelected } : item
     );
-    setList(updatedList); // Update the main list
+    setList(updatedList); // Update the displayed list
     setSelectedList(updatedList.filter((item) => item.isSelected)); // Update the selected list
   };  
   const handleCheckout = () => {
@@ -178,27 +178,27 @@ export default function Page() {
                 />
             ))}
 
-      {/* Scroll to top button */}
+        {/* Scroll to top button */}
       
-    </div>
-  )}
-</div>
+            </div>
+        )}
+        </div>
 
-{/* Summary Section */}
-<div className="sticky p-4 border-t border-gray-200 bg-white bottom-0">
-  <div className="flex justify-between items-center mb-4">
-    <p className="text-lg">
-      Items selected: {selectedList.length}
-    </p>
-    <p className="text-lg font-semibold">${totalPrice.toFixed(2)}</p>
-  </div>
-  <button
-    className="w-full bg-zinc-800 hover:bg-black text-white py-2 rounded-lg text-lg font-semibold"
-    onClick={handleCheckout}
-  >
-    Checkout
-  </button>
-</div>
+        {/* Summary Section */}
+        <div className="sticky p-4 border-t border-gray-200 bg-white bottom-0">
+        <div className="flex justify-between items-center mb-4">
+            <p className="text-lg">
+            Items selected: {selectedList.length}
+            </p>
+            <p className="text-lg font-semibold">${totalPrice.toFixed(2)}</p>
+        </div>
+        <button
+            className="w-full bg-zinc-800 hover:bg-black text-white py-2 rounded-lg text-lg font-semibold"
+            onClick={handleCheckout}
+        >
+            Checkout
+        </button>
+        </div>
 
       </SidebarInset>
     </SidebarProvider>
