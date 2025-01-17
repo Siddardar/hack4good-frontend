@@ -210,7 +210,7 @@ export default function Page() {
           <Separator />
           <CardContent>
             <div className="mt-4">
-              <CardTitle>Purchase History</CardTitle>
+              <CardTitle>Transaction History</CardTitle>
             </div>
           </CardContent>
         </Card>

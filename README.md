@@ -1,7 +1,13 @@
 **MWH SmartMart**
 
 ## Overview
-The MWH SmartMart is a web-based platform designed to streamline administrative tasks while empowering the boys aged 10–19 at Muhammadiyah Welfare Home (MWH). This system simplifies product requests, encourages positive engagement through a voucher system, and provides comprehensive management tools for administrators.
+The MWH SmartMart is a web-based platform designed to streamline administrative tasks while empowering the boys aged 10–19 at Muhammadiyah Welfare Home (MWH). 
+
+This is designed to:
+
+- Motivate the boys to make responsible decisions through a voucher-based reward system.
+- Minimize the time and effort administrators spend on repetitive tasks.
+- Offer intuitive tools for reporting and analysis to focus on impactful data.
 
 ---
 
@@ -28,19 +34,52 @@ The MWH SmartMart is a web-based platform designed to streamline administrative 
 
 ---
 
-
-## Usage
+## How it works
 
 ### For Residents
-- Log in to view available products in store.
-- View their voucher balance. 
-- Add products to the cart and checkout using voucher balance.  
-- Manage their cart.
-- Preorder products that are out of stock.
+- Shop at the Store: The residents may use the vouchers earned to request products from the store which allows them to 
+  - search for a product, 
+  - view their voucher balance
+  - add a product to cart, or 
+  - preorder a product (if the product is out of stock)
+  - checkout items from the cart
+- Review and manage the Cart: To simulate and assist the residents in making informed financial decisions, they can choose to
+  - change the quantity of the product in cart, or
+  - remove a product from cart
 
-### **For Admins**  
-- Log in to manage inventory, monitor voucher distribution, and generate detailed reports.  
-- Access analytics to track trends and make data-driven decisions.
+### For Administrators
+- Resident management: The administrators can
+  - add a resident account (with a default password)
+  - remove a resident account
+  - suspend a resident account
+  - view details of a resident account
+  - reset password for a resident account
+- Staff management: The administrators can
+  - add an adminstrator account (with a default password)
+  - remove an administrator account
+  - reset password for an administrator account
+- Voucher task management: The administrators may allocate vouchers easily through the admin dashboard, they can 
+  - approve a voucher task,
+  - reject a voucher task, or
+  - change a decision that has been made previously
+- Hadle product requests: Administrators can review and update statues of product requests, they can
+  - approve a request
+  - reject a request
+  - change the shipping status of the request
+  - mark a request as complete
+- Generate Reports: Access and analyze automated reports for better decision-making.
+
+---
+
+## Technical Details
+### Tech Stack
+- Frontend: React.js with Next.js for a responsive and interactive user interface.
+- Backend: Node.js with Express.js for API management and secure data handling.
+- Database: MongoDB for robust data storage and retrieval.
+
+### Security Features
+- Role-based access control for secure admin and user interactions.
+- Non-admin users that try to access the admin page will be redirected via middleware. 
 
 ---
 
@@ -48,6 +87,14 @@ The MWH SmartMart is a web-based platform designed to streamline administrative 
 1. Allow residents to submit product requests for products that are not yet available in store.
 2. Allow residents to add multiple quantities from the store page.
 3. Allow admins to generate a wider variety of reports depending on their needs.
+4. Adding an auction system where residents can bid on items using vouchers.
+
+---
+
+## Acknowledgements
+This project is dedicated to the Muhammadiyah Welfare Home and its mission to nurture and empower young lives. It will be submitted to NUS DSC's Hack For Good 2025 hackathon.
+
+---
 
 ## Getting Started 
 
@@ -117,7 +164,6 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Contact
 For any questions or feedback, feel free to reach out:  
-- Email: [your-email@example.com](mailto:your-email@example.com)  
-- GitHub: [Siddardar](https://github.com/Siddardar)
+- GitHub: [hack4good](https://github.com/Siddardar/hack4good-frontend)
 
 ---
