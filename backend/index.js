@@ -95,7 +95,6 @@ app.get("/store", async (req, res) => {
 //Fetch route
 app.get("/fetch/:collectionName", checkAdmin, async (req, res) => {
   const { collectionName } = req.params;
-  
 
   const collection = client.db("hack4good").collection(collectionName);
   try {
@@ -115,8 +114,15 @@ app.post("/delete/:collectionName", checkAdmin, async (req, res) => {
   try {
     // Convert the string ID to an ObjectId
     const task = await collection.deleteOne({
-      _id: ObjectId.createFromHexString(id),
+      _id:
+        collectionName === "residents" || "staff"
+          ? id
+          : ObjectId.createFromHexString(id),
     });
+
+    if (collectionName === "residents" || "staff") {
+      await admin.auth().deleteUser(id);
+    }
 
     if (task.deletedCount === 1) {
       return res
@@ -152,6 +158,8 @@ app.post("/add-task", checkAdmin, async (req, res) => {
   }
 });
 
+// Residents route
+
 // Add residents route
 app.post("/add-resident", checkAdmin, async (req, res) => {
   const collection = client.db("hack4good").collection("residents");
@@ -164,6 +172,7 @@ app.post("/add-resident", checkAdmin, async (req, res) => {
       name,
       username,
       email,
+      isSuspended,
       transactions: transactions.map((transaction) => ({
         amount: transaction.amount,
         date: transaction.date,
@@ -190,6 +199,45 @@ app.post("/add-resident", checkAdmin, async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });
+  }
+});
+
+//Suspend residents route
+app.post("/suspend-resident", checkAdmin, async (req, res) => {
+  const collection = client.db("hack4good").collection("residents");
+  const { id } = req.body;
+
+  try {
+    await admin.auth().updateUser(id, { disabled: true });
+    return res.status(200).json({ message: `User ${id} has been suspended.` });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+//Unsuspend residents route
+app.post("/unsuspend-resident", checkAdmin, async (req, res) => {
+  const collection = client.db("hack4good").collection("residents");
+  const { id } = req.body;
+  try {
+    await admin.auth().updateUser(id, { disabled: false });
+    return res
+      .status(200)
+      .json({ message: `User ${id} has been unsuspended.` });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+//Reset resident password route
+app.post("/reset-password", checkAdmin, async (req, res) => {
+  const collection = client.db("hack4good").collection("residents");
+  const { id } = req.body;
+  try {
+    await admin.auth().send;
+    return res.status(200).json({ message: `User ${id} password updated.` });
+  } catch (error) {
+    return res.status(200).json({ error: error.message });
   }
 });
 
@@ -234,24 +282,30 @@ app.post("/add-user", async (req, res) => {
 
   try {
     const user = await collection.insertOne(req.body);
-    return res.status(200).json({ message: `User ${user.insertedId} created.` , id: user.insertedId });
+    return res.status(200).json({
+      message: `User ${user.insertedId} created.`,
+      id: user.insertedId,
+    });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 });
 
 app.post("/add-admin", async (req, res) => {
-  const collection = client.db("hack4good").collection("staff");  
+  const collection = client.db("hack4good").collection("staff");
   console.log(req.body.person);
-  console.log(req.body)
+  console.log(req.body);
   try {
     const user = await collection.insertOne(req.body);
-    return res.status(200).json({ message: `User ${user.insertedId} created.` , id: user.insertedId });
+    return res.status(200).json({
+      message: `User ${user.insertedId} created.`,
+      id: user.insertedId,
+    });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 });
-  
+
 // Report routes
 // Get date ranges
 app.get("/date-ranges", checkAdmin, async (req, res) => {

@@ -1,5 +1,5 @@
 var admin = require("firebase-admin");
-
+var resetPassword = require("firebase-admin");
 var serviceAccount = require("./serviceAccountKey.json");
 
 admin.initializeApp({

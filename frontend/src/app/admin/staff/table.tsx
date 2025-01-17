@@ -1,6 +1,8 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
+import { auth } from "@/app/firebase/config";
+import { sendPasswordResetEmail } from "firebase/auth";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -12,11 +14,11 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+} from "@tanstack/react-table";
+import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -25,8 +27,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -35,8 +37,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  TableFooter
-} from "@/components/ui/table"
+  TableFooter,
+} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,9 +49,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import {Avatar} from "@nextui-org/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+} from "@/components/ui/alert-dialog";
+import { Avatar } from "@nextui-org/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -57,13 +59,12 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { useIsMobile } from "@/hooks/use-mobile"
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { useIsMobile } from "@/hooks/use-mobile";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
-import { useState } from "react"
-import { setDate } from "date-fns"
-
+import { useState } from "react";
+import { setDate } from "date-fns";
 
 const data: StaffInfo[] = [
   {
@@ -71,48 +72,76 @@ const data: StaffInfo[] = [
     name: "Ken Adams",
     username: "ken99",
     email: "ken99@yahoo.com",
-  }
+  },
 ];
 
-
 export type StaffInfo = {
-  _id : string
-  name: string
-  username: string
-  email: string
-}
-
+  _id: string;
+  name: string;
+  username: string;
+  email: string;
+};
 
 export function DataTable() {
-  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
-  )
+  );
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = React.useState({})
+    React.useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = React.useState({});
 
-   const [data, setData] = React.useState<StaffInfo[]>([]);
-  
-    React.useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const res = await fetch("http://localhost:8080/fetch/staff", {
-            method: "GET",
-            credentials: "include",
-          });
-          if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
-          }
-          const data = await res.json();
-          setData(data);
-        } catch (error) {
-          console.error("Failed to fetch store items:", error);
+  const [data, setData] = React.useState<StaffInfo[]>([]);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch("http://localhost:8080/fetch/staff", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
         }
-      };
-  
-      fetchData();
-    }, []);
+        const data = await res.json();
+        setData(data);
+      } catch (error) {
+        console.error("Failed to fetch store items:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const resetPassword = async (email: string) => {
+    try {
+      const res = await sendPasswordResetEmail(auth, email);
+      console.log("Password reset email sent to: ", email);
+    } catch (err) {
+      const errorCode = (err as any).code;
+      const errroMessage = (err as any).code;
+    }
+  };
+
+  const deleteStaff = async (id: string) => {
+    const res = await fetch("http://localhost:8080/delete/staff", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+      credentials: "include",
+    });
+    if (res.ok) {
+      console.log("Staff deleted successfully");
+      setData((prev) => {
+        const updatedData = prev.filter((staff) => staff._id !== id);
+        return updatedData;
+      });
+    } else {
+      console.log("Failed to delete staff");
+    }
+  };
 
   const columns: ColumnDef<StaffInfo>[] = [
     {
@@ -147,18 +176,18 @@ export function DataTable() {
     {
       accessorKey: "email",
       header: ({ column }) => {
-        return (
-          <div> Email </div>
-        )
+        return <div> Email </div>;
       },
-      cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+      cell: ({ row }) => (
+        <div className="lowercase">{row.getValue("email")}</div>
+      ),
     },
     {
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
-        const staff = row.original
-  
+        const staff = row.original;
+
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -168,19 +197,19 @@ export function DataTable() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              
-              <DropdownMenuItem>Reset Password</DropdownMenuItem>
-              <DropdownMenuSeparator/>
-              <DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => resetPassword(staff.email)}>
+                Reset Password
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => deleteStaff(staff._id)}>
                 <div className="text-red-500 font-semibold">Remove Staff</div>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        )
+        );
       },
     },
-  ]
-
+  ];
 
   const table = useReactTable({
     data,
@@ -204,20 +233,17 @@ export function DataTable() {
         pageSize: 1,
       },
     },
-  })
-  
-  React.useEffect(() => {
-    table.setPageSize(data.length); 
-  }, [data, table]);
-  
+  });
 
-    
+  React.useEffect(() => {
+    table.setPageSize(data.length);
+  }, [data, table]);
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleCreateAccount = async () => {
-
     setLoading(true);
 
     try {
@@ -232,42 +258,45 @@ export function DataTable() {
 
   async function createAdmin(email: string, name: string, password: string) {
     try {
-      const createUserResponse = await fetch("http://localhost:8080/create-user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, name, password }),
-        credentials: "include",
-      });
-  
+      const createUserResponse = await fetch(
+        "http://localhost:8080/create-user",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, name, password }),
+          credentials: "include",
+        }
+      );
+
       if (!createUserResponse.ok) {
         throw new Error("Failed to create user");
       }
-  
+
       const { id: uid } = await createUserResponse.json();
-  
+
       const setAdminResponse = await fetch("http://localhost:8080/set-admin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ uid }),
-        credentials: "include", 
+        credentials: "include",
       });
-  
+
       if (!setAdminResponse.ok) {
         throw new Error("Failed to set user as admin");
       }
-  
+
       const adminResult = await setAdminResponse.json();
-      console.log(adminResult.message); 
-      const person:StaffInfo = {
+      console.log(adminResult.message);
+      const person: StaffInfo = {
         _id: uid,
         email: email,
         name: name,
-        username: name.replace(" ", "_").toLowerCase()
-      }
+        username: name.replace(" ", "_").toLowerCase(),
+      };
       console.log(person);
       const addToDB = await fetch("http://localhost:8080/add-admin", {
         method: "POST",
@@ -284,13 +313,12 @@ export function DataTable() {
       } else {
         console.log("Failed to add to DB");
       }
-      
     } catch (error) {
       console.error("Error creating admin user:", error);
       throw error;
     }
   }
-  
+
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
@@ -302,60 +330,60 @@ export function DataTable() {
           }
           className="max-w-sm"
         />
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="outline" className="ml-auto">
-          Create Staff Account
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Create a new staff account</AlertDialogTitle>
-          <AlertDialogDescription>
-            Enter the details of the new staff account.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleCreateAccount();
-          }}
-        >
-          <div className="grid w-full items-center gap-4">
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="name">Staff Name</Label>
-              <Input
-                id="name"
-                placeholder="Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="email">Staff Email</Label>
-              <Input
-                id="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-          </div>
-        </form>
-        <AlertDialogFooter>
-          <AlertDialogCancel className="text-red-500">Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            className="bg-green-500"
-            onClick={handleCreateAccount}
-            disabled={loading}
-          >
-            Create Account
-          </AlertDialogAction>
-        </AlertDialogFooter>
-
-      </AlertDialogContent>
-    </AlertDialog>
-          
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" className="ml-auto">
+              Create Staff Account
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Create a new staff account</AlertDialogTitle>
+              <AlertDialogDescription>
+                Enter the details of the new staff account.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleCreateAccount();
+              }}
+            >
+              <div className="grid w-full items-center gap-4">
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="name">Staff Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="email">Staff Email</Label>
+                  <Input
+                    id="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+            </form>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="text-red-500">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-green-500"
+                onClick={handleCreateAccount}
+                disabled={loading}
+              >
+                Create Account
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
       <div className="rounded-md border">
         <Table>
@@ -372,7 +400,7 @@ export function DataTable() {
                             header.getContext()
                           )}
                     </TableHead>
-                  )
+                  );
                 })}
               </TableRow>
             ))}
@@ -414,5 +442,5 @@ export function DataTable() {
         </div>
       </div>
     </div>
-  )
+  );
 }
