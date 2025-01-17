@@ -1,9 +1,9 @@
 const express = require("express");
 const { admin } = require("./admin");
-const { exportToExcel } = require("./exportToExcel");
 const bodyParser = require("body-parser");
 const checkAdmin = require("./middleware");
 require("dotenv").config();
+const ExcelJS = require('exceljs');
 
 const app = express();
 const cors = require("cors");
@@ -411,14 +411,6 @@ app.post("/generate-inventory-summary", checkAdmin, async (req, res) => {
       }
     );
 
-    // Add these debug logs right before the store collection query
-    console.log("IDs we're searching for:", [...stockAtStartMap.keys(), ...stockAtEndMap.keys()]);
-
-    // Add a direct document check
-    const sampleStoreDoc = await storeCollection.findOne();
-    console.log("Sample store document:", sampleStoreDoc);
-    console.log("Store query result:", itemNames);
-
     res.status(200).json({ message: "Report generated successfully", report });
   } catch (error) {
     console.error("Error generating report:", error);
@@ -484,7 +476,7 @@ app.post("/audit", checkAdmin, (req, res) => {
   }
 });
 
-app.get("/export-report", checkAdmin, exportToExcel);
+app.post("/export-report", checkAdmin, exportToExcel);
 
 app.post("/product-request", async (req, res) => {
   try {
@@ -533,6 +525,34 @@ app.get("/product-request", async (req, res) => {
   }
 });
 
+app.post("/product-request-by-date", checkAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.body;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ message: "Start date and end date are required" });
+    }
+
+    const collection = client.db("hack4good").collection("product-requests");
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    const requests = await collection.find({
+      dateRequested: {
+        $gte: start,
+        $lte: end
+      }
+    }).toArray();
+
+    return res.status(200).json({ requests });
+  } catch (error) {
+    console.error("Error fetching requests:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 app.patch("/product-requests/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -559,6 +579,186 @@ app.patch("/product-requests/:id", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
+
+async function exportToExcel(req, res) {
+  try {
+      const { startDate, endDate } = req.body;
+      
+      if (!startDate || !endDate) {
+          return res.status(400).json({ message: "Start date and end date are required" });
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      const collection = client.db("hack4good").collection("product-requests");
+      
+      const requests = await collection.find({
+          dateRequested: {
+              $gte: start,
+              $lte: end
+          }
+      }).toArray();
+
+      const requestsSummary = new Map();
+      requests.forEach(request => {
+          if (!requestsSummary.has(request.itemName)) {
+              requestsSummary.set(request.itemName, {
+                  item: request.itemName,
+                  accepted: 0,
+                  rejected: 0,
+                  pending: 0
+              });
+          }
+          
+          const summary = requestsSummary.get(request.itemName);
+          switch (request.status.toLowerCase()) {
+              case 'accepted':
+                  summary.accepted += 1;
+                  break;
+              case 'rejected':
+                  summary.rejected += 1;
+                  break;
+              case 'pending':
+                  summary.pending += 1;
+                  break;
+          }
+      });
+
+      const requestsData = Array.from(requestsSummary.values());
+
+      const workbook = new ExcelJS.Workbook();
+      const requestsSheet = workbook.addWorksheet('Requests');
+
+      requestsSheet.columns = [
+          { header: 'Item', key: 'item', width: 20 },
+          { header: 'Accepted', key: 'accepted', width: 12, style: { alignment: { horizontal: 'right' } } },
+          { header: 'Rejected', key: 'rejected', width: 12, style: { alignment: { horizontal: 'right' } } },
+          { header: 'Pending', key: 'pending', width: 12, style: { alignment: { horizontal: 'right' } } },
+          { header: 'Total', key: 'total', width: 15, style: { alignment: { horizontal: 'right' } } }
+      ];
+
+      requestsData.forEach((row) => {
+          row.total = row.accepted + row.rejected + row.pending;
+          requestsSheet.addRow(row);
+      });
+
+      // Calculate and add totals
+      const totalAccepted = requestsData.reduce((acc, row) => acc + row.accepted, 0);
+      const totalRejected = requestsData.reduce((acc, row) => acc + row.rejected, 0);
+      const totalPending = requestsData.reduce((acc, row) => acc + row.pending, 0);
+      const totalRequests = totalAccepted + totalRejected + totalPending;
+
+      requestsSheet.addRow({
+          item: 'Total',
+          accepted: totalAccepted,
+          rejected: totalRejected,
+          pending: totalPending,
+          total: totalRequests
+      })
+
+      // INVENTORY
+
+      const inventoryCollection = client.db("hack4good").collection("audit");
+
+      const startString = new Date(startDate).toISOString();
+      const endString = new Date(endDate).toISOString();
+
+      // Gets the stock level from the audit log closest before the start date
+      const stockAtStart = await inventoryCollection
+        .aggregate([
+          { $match: { date: { $lte: startString } } },
+          { $sort: { date: -1 } },
+          {
+            $group: {
+              _id: "$itemId",
+              stockAtStart: { $first: "$stockAfter" },
+            },
+          },
+        ])
+        .toArray();
+
+      // Gets the stock level from the audit log closest before the end date
+      const stockAtEnd = await inventoryCollection
+        .aggregate([
+          { $match: { date: { $lte: endString } } },
+          { $sort: { date: -1 } },
+          {
+            $group: {
+              _id: "$itemId",
+              stockAtEnd: { $first: "$stockAfter" },
+            },
+          },
+        ])
+        .toArray();
+
+      const stockAtStartMap = new Map(stockAtStart.map((item) => [item._id, item.stockAtStart]));
+      const stockAtEndMap = new Map(stockAtEnd.map((item) => [item._id, item.stockAtEnd]));
+
+      const uniqueIds = [...new Set([...stockAtStartMap.keys(), ...stockAtEndMap.keys()])];
+      const objectIds = uniqueIds.map(id => new ObjectId(id));
+      
+      const storeCollection = client.db("hack4good").collection("store");
+      
+      const itemNames = await storeCollection
+        .find({ _id: { $in: objectIds } })
+        .toArray();
+
+      const nameMap = new Map(itemNames.map((item) => [item._id.toString(), item.name]));
+      const inventoryData = Array.from(new Set([...stockAtStartMap.keys(), ...stockAtEndMap.keys()])).map(
+        (itemId) => {
+          const stockLevelAtStart = stockAtStartMap.get(itemId) || 0;
+          const stockLevelAtEnd = stockAtEndMap.get(itemId) || 0;
+          const name = nameMap.get(itemId) || "Unknown Item";
+          return {
+            name,
+            stockLevelAtStart,
+            stockLevelAtEnd
+          };
+        }
+      );
+
+      const inventorySheet = workbook.addWorksheet('Inventory');
+
+      inventorySheet.columns = [
+          { header: 'Item', key: 'name', width: 20 },
+          { header: 'Stock Level at Start', key: 'stockLevelAtStart', width: 18, style: { alignment: { horizontal: 'right' } } },
+          { header: 'Stock Level at End', key: 'stockLevelAtEnd', width: 18, style: { alignment: { horizontal: 'right' } } },
+          { header: 'Change', key: 'change', width: 12, style: { alignment: { horizontal: 'right' } } }
+      ];
+
+      inventoryData.forEach((row) => {
+          row.change = row.stockLevelAtStart - row.stockLevelAtEnd;
+          inventorySheet.addRow(row);
+      });
+
+      const totalStartStock = inventoryData.reduce((acc, row) => acc + row.stockLevelAtStart, 0);
+      const totalEndStock = inventoryData.reduce((acc, row) => acc + row.stockLevelAtEnd, 0);
+      const totalChange = inventoryData.reduce((acc, row) => acc + row.change, 0);
+
+    inventorySheet.addRow({
+        name: 'Total',
+        stockLevelAtStart: totalStartStock,
+        stockLevelAtEnd: totalEndStock,
+        change: totalChange,
+    });
+
+    requestsSheet.getRow(1).font = { bold: true };
+    inventorySheet.getRow(1).font = { bold: true };
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=requests_report_${start.toISOString().split('T')[0]}_to_${end.toISOString().split('T')[0]}.xlsx`);
+
+    await workbook.xlsx.write(res);
+    res.end();
+
+  } catch (error) {
+      console.error('Export error:', error);
+      res.status(500).json({ message: 'Export failed' });
+  }
+}
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => {

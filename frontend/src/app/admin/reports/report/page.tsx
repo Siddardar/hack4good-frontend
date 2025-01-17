@@ -36,11 +36,97 @@ export default function Page() {
     const from = searchParams.get("from") || "2025-01-01";
     const to = searchParams.get("to") || "2025-01-15";
 
-    const [requestSummary] = useState([
-        { name: "Item A", accepted: 15, rejected: 3, pending: 5, shipping: 8 },
-        { name: "Item B", accepted: 10, rejected: 1, pending: 2, shipping: 4 },
-        { name: "Item C", accepted: 8, rejected: 0, pending: 6, shipping: 3 },
-    ]);
+    type RequestItem = {
+        _id: string;
+        userId: string;
+        userEmail: string;
+        itemId: string;
+        itemName: string;
+        dateRequested: string;
+        status: string;
+    }
+
+    type ApiResponse = {
+        requests: RequestItem[];
+    }
+
+    type RequestSummaryItem = {
+        name: string;
+        accepted: number;
+        rejected: number;
+        pending: number;
+    }
+
+    const [requestSummary, setRequestSummary] = useState<RequestSummaryItem[]>([]);
+
+    useEffect(() => {
+        const fetchRequestData = async () => {
+            try {
+                const response = await fetch("http://localhost:8080/product-request-by-date", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        startDate: from,
+                        endDate: to,
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch request data');
+                }
+
+                const rawData: ApiResponse = await response.json();
+                console.log('Raw API response:', rawData);
+
+                if (!rawData.requests || !Array.isArray(rawData.requests)) {
+                    throw new Error('Invalid data format received from API');
+                }
+
+                // Process the data to create a summary
+                const summaryMap = new Map<string, RequestSummaryItem>();
+
+                rawData.requests.forEach(request => {
+                    if (!request.itemName) {
+                        console.warn('Request missing itemName:', request);
+                        return;
+                    }
+
+                    if (!summaryMap.has(request.itemName)) {
+                        summaryMap.set(request.itemName, {
+                            name: request.itemName,
+                            accepted: 0,
+                            rejected: 0,
+                            pending: 0,
+                        });
+                    }
+
+                    const summary = summaryMap.get(request.itemName)!;
+                    switch (request.status?.toLowerCase()) {
+                        case 'accepted':
+                            summary.accepted += 1;
+                            break;
+                        case 'rejected':
+                            summary.rejected += 1;
+                            break;
+                        case 'pending':
+                            summary.pending += 1;
+                            break;
+                        default:
+                            console.warn('Unknown status:', request.status);
+                    }
+                });
+
+                setRequestSummary(Array.from(summaryMap.values()));
+            } catch (error) {
+                console.error('Error fetching request data:', error);
+                setRequestSummary([]);
+            }
+        };
+
+        fetchRequestData();
+    }, [from, to]);
 
     type inventorySummaryItem = {
         name: string;
@@ -75,10 +161,18 @@ export default function Page() {
     }, [from, to]);
 
     const exportToExcel = async () => {
+        
         const response = await fetch('http://localhost:8080/export-report', {
-            method: 'GET',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                startDate: from,
+                endDate: to,
+            })
         });
-
+    
         if (response.ok) {
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
@@ -92,7 +186,6 @@ export default function Page() {
     const totalAccepted = requestSummary.reduce((sum, item) => sum + item.accepted, 0);
     const totalRejected = requestSummary.reduce((sum, item) => sum + item.rejected, 0);
     const totalPending = requestSummary.reduce((sum, item) => sum + item.pending, 0);
-    const totalShipping = requestSummary.reduce((sum, item) => sum + item.shipping, 0);
 
     const totalStockStart = inventorySummary.reduce((sum, item) => sum + item.stockLevelAtStart, 0);
     const totalStockEnd = inventorySummary.reduce((sum, item) => sum + item.stockLevelAtEnd, 0);
@@ -145,20 +238,18 @@ export default function Page() {
                                         <TableHead className="text-center">Accepted</TableHead>
                                         <TableHead className="text-center">Rejected</TableHead>
                                         <TableHead className="text-center">Pending</TableHead>
-                                        <TableHead className="text-center">Shipping</TableHead>
                                         <TableHead className="text-center">Total Requests</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {requestSummary.map((item) => {
-                                        const totalRequests = item.accepted + item.rejected + item.pending + item.shipping;
+                                        const totalRequests = item.accepted + item.rejected + item.pending;
                                         return (
                                             <TableRow key={item.name}>
                                                 <TableCell className="font-medium">{item.name}</TableCell>
                                                 <TableCell className="text-center">{item.accepted}</TableCell>
                                                 <TableCell className="text-center">{item.rejected}</TableCell>
                                                 <TableCell className="text-center">{item.pending}</TableCell>
-                                                <TableCell className="text-center">{item.shipping}</TableCell>
                                                 <TableCell className="text-center font-bold">{totalRequests}</TableCell>
                                             </TableRow>
                                         );
@@ -172,9 +263,8 @@ export default function Page() {
                                         <TableCell className="text-center font-bold">{totalAccepted}</TableCell>
                                         <TableCell className="text-center font-bold">{totalRejected}</TableCell>
                                         <TableCell className="text-center font-bold">{totalPending}</TableCell>
-                                        <TableCell className="text-center font-bold">{totalShipping}</TableCell>
                                         <TableCell className="text-center font-bold">
-                                            {totalAccepted + totalRejected + totalPending + totalShipping}
+                                            {totalAccepted + totalRejected + totalPending}
                                         </TableCell>
                                     </TableRow>
                                 </TableFooter>
