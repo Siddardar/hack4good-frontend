@@ -36,7 +36,7 @@ export const StoreItemCard: React.FC<StoreItemCardProps> = ({
           alt={item.name}
           src={item.img}
           className={`w-full object-cover h-[160px] ${
-            item.quantity === 0 ? "opacity-50 grayscale" : ""
+            item.quantity === 0 ? "grayscale" : ""
           }`}
           radius="lg"
           width="100%"
