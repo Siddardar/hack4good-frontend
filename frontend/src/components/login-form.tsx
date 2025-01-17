@@ -15,7 +15,7 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [signInWithEmailAndPassword] = useSignInWithEmailAndPassword(auth);
   const router = useRouter();
@@ -23,18 +23,15 @@ export function LoginForm({
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const email = username.includes("@")
-        ? username
-        : username + "@random.com";
       const res = await signInWithEmailAndPassword(email, password);
       console.log({ res });
 
       if (res) {
         // Store user in local
-        localStorage.setItem("user", username);
+        localStorage.setItem("user", email);
 
         // Clear form fields
-        setUsername("");
+        setEmail("");
         setPassword("");
 
         // Redirect to store
@@ -93,14 +90,14 @@ export function LoginForm({
       </div>
       <div className="grid gap-6">
         <div className="grid gap-2">
-          <Label htmlFor="email">Username</Label>
+          <Label htmlFor="email">Email</Label>
           <Input
-            id="username"
+            id="email"
             type="text"
             placeholder="John123"
             required
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
         <div className="grid gap-2">
