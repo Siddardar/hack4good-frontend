@@ -81,7 +81,7 @@ export default function Page() {
       } catch (error) {
         console.error("Failed to fetch balance:", error);
       }
-    }
+    };
 
     fetchData();
     fetchBalance();
@@ -127,12 +127,12 @@ export default function Page() {
     setShowPreorderFeedback(true);
     const userId = user?.uid;
     const userEmail = user?.email || "Anonymous";
-  
+
     if (!userId) {
       console.error("User is not authenticated.");
       return;
     }
-  
+
     const requestData = {
       userId,
       userEmail,
@@ -141,7 +141,7 @@ export default function Page() {
       dateRequested: new Date().toISOString(),
       status: "Pending",
     };
-  
+
     try {
       const res = await fetch("http://localhost:8080/product-request", {
         method: "POST",
@@ -150,7 +150,7 @@ export default function Page() {
         },
         body: JSON.stringify(requestData),
       });
-  
+
       if (res.ok) {
         const data = await res.json();
         console.log("Request sent successfully:", data);
@@ -161,12 +161,11 @@ export default function Page() {
     } catch (error) {
       console.error("Failed to send request:", error);
     }
-  
+
     setTimeout(() => {
       setShowPreorderFeedback(false);
     }, 1000);
   };
-  
 
   const updateUserCart = async (item: StoreItem) => {
     item.quantity = 1;
@@ -189,8 +188,7 @@ export default function Page() {
     } catch (error) {
       console.error("Failed to update cart:", error);
     }
-  }
-
+  };
 
   return (
     <SidebarProvider>
@@ -250,7 +248,9 @@ export default function Page() {
           <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
             <div className="bg-black text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg">
               <Check className="w-5 h-5 text-white" />
-              <span className="text-sm font-medium">Preorder has been sent</span>
+              <span className="text-sm font-medium">
+                Preorder has been sent
+              </span>
             </div>
           </div>
         )}

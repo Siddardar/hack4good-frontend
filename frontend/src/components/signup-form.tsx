@@ -9,6 +9,7 @@ import { initializeApp } from "firebase/app";
 import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { auth, database } from "@/app/firebase/config";
 import { ref, set } from "firebase/database";
+import { useRouter } from "next/navigation";
 
 const passwordRegex = /^.{6,}$/;
 
@@ -16,13 +17,14 @@ export function SignupForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [validPassword, setValidPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [matchPassword, setMatchPassword] = useState(false);
   const [createUserWithEmailAndPassword] =
     useCreateUserWithEmailAndPassword(auth);
+  const router = useRouter();
 
   useEffect(() => {
     const res = passwordRegex.test(password);
@@ -34,12 +36,12 @@ export function SignupForm({
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const email = username + "@random.com";
       const res = await createUserWithEmailAndPassword(email, password);
       console.log({ res });
-      setUsername("");
+      setEmail("");
       setPassword("");
       setConfirmPassword("");
+      router.push("/login");
     } catch (err) {
       console.error(err);
     }
@@ -54,18 +56,18 @@ export function SignupForm({
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-2xl font-bold">Register a new account</h1>
         <p className="text-balance text-sm text-muted-foreground">
-          Enter a new username and password to create an account
+          Enter a new email and password to create an account
         </p>
       </div>
       <div className="grid gap-6">
         <div className="grid gap-2">
-          <Label htmlFor="email">Username</Label>
+          <Label htmlFor="email">Email</Label>
           <Input
-            id="username"
-            type="text"
-            placeholder="John123"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            id="email"
+            type="email"
+            placeholder="John123@gmail.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
