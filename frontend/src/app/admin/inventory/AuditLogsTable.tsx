@@ -1,12 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react";
 import {
     Table,
     TableBody,
-    TableCaption,
     TableCell,
-    TableFooter,
     TableHead,
     TableHeader,
     TableRow,
@@ -14,6 +11,7 @@ import {
 
 interface AuditLog {
     id: string;
+    itemId: string;
     action: string;
     user: string;
     date: string;

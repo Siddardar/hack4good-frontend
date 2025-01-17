@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import {
     Breadcrumb,
@@ -27,7 +27,7 @@ import {
     TableBody,
     TableFooter,
 } from "@/components/ui/table";
-import { format } from "date-fns"
+import { format } from "date-fns";
 
 export default function Page() {
 
@@ -42,11 +42,37 @@ export default function Page() {
         { name: "Item C", accepted: 8, rejected: 0, pending: 6, shipping: 3 },
     ]);
 
-    const inventorySummary = [
-        { name: "Item A", stockLevelStart: 60, stockLevelEnd: 50 },
-        { name: "Item B", stockLevelStart: 25, stockLevelEnd: 20 },
-        { name: "Item C", stockLevelStart: 15, stockLevelEnd: 20 },
-    ];
+    type inventorySummaryItem = {
+        name: string;
+        stockLevelAtStart: number;
+        stockLevelAtEnd: number;
+    };
+
+    const [inventorySummary, setInventorySummary] = useState<inventorySummaryItem[]>([]);
+
+    useEffect(() => {
+        const fetchInventorySummary = async () => {
+            const response = await fetch("http://localhost:8080/generate-inventory-summary", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    startDate: from,
+                    endDate: to,
+                }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setInventorySummary(Object.values(data.report));
+            } else {
+                console.error("Failed to fetch inventory summary");
+            }
+        };
+
+        fetchInventorySummary();
+    }, [from, to]);
 
     const exportToExcel = async () => {
         const response = await fetch('http://localhost:8080/export-report', {
@@ -68,8 +94,8 @@ export default function Page() {
     const totalPending = requestSummary.reduce((sum, item) => sum + item.pending, 0);
     const totalShipping = requestSummary.reduce((sum, item) => sum + item.shipping, 0);
 
-    const totalStockStart = inventorySummary.reduce((sum, item) => sum + item.stockLevelStart, 0);
-    const totalStockEnd = inventorySummary.reduce((sum, item) => sum + item.stockLevelEnd, 0);
+    const totalStockStart = inventorySummary.reduce((sum, item) => sum + item.stockLevelAtStart, 0);
+    const totalStockEnd = inventorySummary.reduce((sum, item) => sum + item.stockLevelAtEnd, 0);
     const totalStockChange = totalStockEnd - totalStockStart;
 
     return (
@@ -170,12 +196,12 @@ export default function Page() {
                                 </TableHeader>
                                 <TableBody>
                                     {inventorySummary.map((item) => {
-                                        const change = item.stockLevelEnd - item.stockLevelStart;
+                                        const change = item.stockLevelAtEnd - item.stockLevelAtStart;
                                         return (
                                             <TableRow key={item.name}>
                                                 <TableCell className="font-medium">{item.name}</TableCell>
-                                                <TableCell className="text-center">{item.stockLevelStart}</TableCell>
-                                                <TableCell className="text-center">{item.stockLevelEnd}</TableCell>
+                                                <TableCell className="text-center">{item.stockLevelAtStart}</TableCell>
+                                                <TableCell className="text-center">{item.stockLevelAtEnd}</TableCell>
                                                 <TableCell
                                                     className={`text-center font-bold ${change < 0 ? "text-red-600" : "text-green-600"
                                                         }`}
