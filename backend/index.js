@@ -139,11 +139,13 @@ app.post("/update-item", async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
-  
-// Report routes  
+
+// Report routes
+
 // Get date ranges
 app.get("/date-ranges", async (req, res) => {
   const collection = client.db("hack4good").collection("date-ranges");
+
   try {
     const dateRanges = await collection
       .find()
@@ -224,6 +226,52 @@ app.put("/date-ranges/:id", async (req, res) => {
     }
   } catch (error) {
     return res.status(500).json({ error: error.message });
+  }
+});
+
+// Audit routes
+
+// Get audit logs
+app.get("/audit", async (req, res) => {
+  const collection = client.db("hack4good").collection("audit");
+
+  try {
+    const auditLogs = await collection.find({}).toArray();
+
+    return res.status(200).json(auditLogs);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+
+app.post("/audit", (req, res) => {
+  try {
+      const { id, action, user, date, details, stockBefore, stockAfter } = req.body;
+
+      if (!id || !action || !user || !date || !details || stockBefore === undefined || stockAfter === undefined) {
+          return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const auditLog = {
+          id,
+          action,
+          user,
+          date,
+          details,
+          stockBefore,
+          stockAfter
+      };
+
+      const collection = client.db("hack4good").collection("audit");
+      collection.insertOne(auditLog);
+
+      console.log("Audit log saved:", auditLog);
+
+      res.status(201).json({ message: "Audit log created successfully", auditLog });
+  } catch (error) {
+      console.error("Error saving audit log:", error);
+      res.status(500).json({ message: "Internal server error" });
   }
 });
 

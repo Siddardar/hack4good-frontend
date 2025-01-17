@@ -1,3 +1,6 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { AppSidebar } from "@/components/app-sidebar";
 import {
   Breadcrumb,
@@ -14,9 +17,41 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
-import { DataTable } from "./table";
+import DataTable from "./table";
+import { AuditLogsTable } from "./AuditLogsTable";
+
+interface AuditLog {
+  id: string;
+  action: string;
+  user: string;
+  date: string;
+  details: string;
+  stockBefore: number;
+  stockAfter: number;
+}
 
 export default function Page() {
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+
+  useEffect(() => {
+      fetchAuditLogs();
+  }, []);
+
+  const fetchAuditLogs = async () => {
+      try {
+          const response = await fetch("http://localhost:8080/audit");
+          const data = await response.json();
+          setAuditLogs(data); // Set the fetched logs
+      } catch (err) {
+          console.error("Failed to fetch audit logs", err);
+      }
+  };
+
+  const addAuditLog = (newLog: AuditLog) => {
+      // Update the auditLogs state by adding the new log to the beginning
+      setAuditLogs((prevLogs) => [newLog, ...prevLogs]);
+  };
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -39,7 +74,11 @@ export default function Page() {
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <DataTable />
+          <DataTable addAuditLog={addAuditLog} />
+        </div>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <h2 className="font-medium p-1">Audit Logs</h2>
+          <AuditLogsTable auditLogs={auditLogs} />
         </div>
       </SidebarInset>
     </SidebarProvider>
