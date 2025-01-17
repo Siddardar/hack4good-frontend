@@ -2,7 +2,14 @@ const admin = require("firebase-admin");
 
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
+    credential: admin.credential.cert({
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: (process.env.FIREBASE_PRIVATE_KEY || "").replace(
+        /\\n/g,
+        "\n"
+      ),
+    }),
   });
 }
 
@@ -16,6 +23,9 @@ const checkAdmin = async (req, res, next) => {
   // const token = authHeader.split(" ")[1];
 
   const token = req.header("token");
+  if (!token) {
+    return res.status(401).send("Unauthorized");
+  }
 
   try {
     const decodedToken = await admin.auth().verifyIdToken(token);
@@ -28,7 +38,7 @@ const checkAdmin = async (req, res, next) => {
       res.status(403).send("Forbidden");
     }
   } catch (error) {
-    res.status(401).send("Unauthorized");
+    res.status(401).send("Token is not valid");
   }
 };
 
